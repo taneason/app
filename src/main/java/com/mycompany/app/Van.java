@@ -21,18 +21,18 @@ public class Van extends Vehicle {
 
     @Override
     public String toString() {
-        return "╭──────────────────────────────────────────────╮\n" +
-               "│ Vehicle ID: " + getVehicleId() + 
-               "\n│ Model: " + getModel() +
-               "\n│ Type: " + getType() +
-               "\n│ Daily Rate: RM" + getDailyRate() +
-               "\n│ Status: " + (isAvailable() ? "Available" : "Rented") +
-               "\n│" +
-               "\n│ Features:" +
-               "\n│ • Passenger Capacity: " + getPassengerCapacity() + " people" +
-               "\n│ • Luggage Space: " + luggageSpace + " bags" +
-               "\n│ • Perfect for: Family trips, corporate events, group travel" +
-               "\n╰──────────────────────────────────────────────╯";
+        return "+----------------------------------------------+\n" +
+               "| Vehicle ID: " + getVehicleId() + 
+               "\n| Model: " + getModel() +
+               "\n| Type: " + getType() +
+               "\n| Daily Rate: RM" + getDailyRate() +
+               "\n| Status: " + (isAvailable() ? "Available" : "Rented") +
+               "\n|" +
+               "\n| Features:" +
+               "\n| - Passenger Capacity: " + getPassengerCapacity() + " people" +
+               "\n| - Luggage Space: " + luggageSpace + " bags" +
+               "\n| - Perfect for: Family trips, corporate events, group travel" +
+               "\n+----------------------------------------------+";
     }
 }
 

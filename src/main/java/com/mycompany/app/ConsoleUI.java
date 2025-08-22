@@ -15,8 +15,8 @@ public class ConsoleUI {
     private final Scanner sc = new Scanner(System.in);
     private Customer currentCustomer = null;
     
-    private static final String LINE = "═══════════════════════════════════════════════════";
-    private static final String DOUBLE_LINE = "╔═════════════════════════════════════════════════╗";
+    private static final String LINE = "===================================================";
+    private static final String DOUBLE_LINE = "+==================================================+";
     
     public ConsoleUI(RentalService service) {
         this.service = service;
@@ -24,8 +24,8 @@ public class ConsoleUI {
     
     private void printHeader(String title) {
         System.out.println("\n" + DOUBLE_LINE);
-        System.out.println("║  " + centerText(title, 45) + "  ║");
-        System.out.println("╚═════════════════════════════════════════════════╝");
+        System.out.println("|  " + centerText(title, 45) + "  |");
+        System.out.println("+==================================================+");
     }
     
     private String centerText(String text, int width) {
@@ -162,7 +162,7 @@ public class ConsoleUI {
             service.addCustomer(c);
             
             System.out.println("\n" + LINE);
-            System.out.println("✓ Registration successful!");
+            System.out.println("+ Registration successful!");
             System.out.println("Welcome to our service, " + name + "!");
             System.out.println(LINE);
             pressEnterToContinue();
@@ -173,7 +173,7 @@ public class ConsoleUI {
             customerMainMenu();
         } catch (Exception e) {
             System.out.println("\n" + LINE);
-            System.out.println("❌ Registration failed: " + e.getMessage());
+            System.out.println("X Registration failed: " + e.getMessage());
             System.out.println(LINE);
             pressEnterToContinue();
         }
@@ -191,7 +191,7 @@ public class ConsoleUI {
                 return; 
             }
             
-            System.out.println("━━━ Available Vehicles ━━━\n");
+            System.out.println("--- Available Vehicles ---\n");
             for (int i = 0; i < availableVehicles.size(); i++) {
                 if (i > 0) System.out.println(); // Add space between vehicles
                 System.out.println("OPTION " + (i + 1) + ":");
@@ -252,7 +252,7 @@ public class ConsoleUI {
                                .toList();
             
             if (activeBookings.isEmpty()) {
-                System.out.println("\n📭 You have no active bookings to return.");
+                System.out.println("\n[!] You have no active bookings to return.");
                 pressEnterToContinue();
                 return;
             }
@@ -282,13 +282,13 @@ public class ConsoleUI {
             
             if (confirm.toLowerCase().equals("yes")) {
                 service.returnVehicle(bid);
-                System.out.println("\n✓ Vehicle returned successfully!");
+                System.out.println("\n+ Vehicle returned successfully!");
             } else {
                 System.out.println("\nReturn cancelled.");
             }
             
         } catch (Exception e) {
-            System.out.println("❌ Error returning vehicle: " + e.getMessage());
+            System.out.println("X Error returning vehicle: " + e.getMessage());
         }
         pressEnterToContinue();
     }
@@ -297,7 +297,7 @@ public class ConsoleUI {
         printHeader("MY RENTAL HISTORY");
         var hist = service.getBookingsByCustomer(currentCustomer);
         if (hist.isEmpty()) {
-            System.out.println("\n📭 You have no rental history yet.");
+            System.out.println("\n[!] You have no rental history yet.");
             System.out.println("Make your first booking to get started!");
         } else {
             System.out.println("\nYour past and current bookings:\n");
@@ -374,7 +374,7 @@ public class ConsoleUI {
         printHeader("ALL BOOKINGS");
         var bookings = service.getBookings();
         if (bookings.isEmpty()) {
-            System.out.println("\n📭 No bookings found in the system.");
+            System.out.println("\n[!] No bookings found in the system.");
         } else {
             System.out.println("\nTotal Bookings: " + bookings.size());
             System.out.println(LINE);
@@ -384,14 +384,14 @@ public class ConsoleUI {
             var completedBookings = bookings.stream().filter(b -> b.isReturned()).toList();
             
             if (!activeBookings.isEmpty()) {
-                System.out.println("\n📗 ACTIVE BOOKINGS (" + activeBookings.size() + "):");
+                System.out.println("\n[A] ACTIVE BOOKINGS (" + activeBookings.size() + "):");
                 for (var booking : activeBookings) {
                     System.out.println(booking.detailed() + "\n");
                 }
             }
             
             if (!completedBookings.isEmpty()) {
-                System.out.println("\n📘 COMPLETED BOOKINGS (" + completedBookings.size() + "):");
+                System.out.println("\n[C] COMPLETED BOOKINGS (" + completedBookings.size() + "):");
                 for (var booking : completedBookings) {
                     System.out.println(booking.detailed() + "\n");
                 }
@@ -461,19 +461,19 @@ public class ConsoleUI {
         printHeader("ALL PROMOTIONS");
         var allPromotions = service.getAllPromotions();
         if (allPromotions.isEmpty()) {
-            System.out.println("\n📭 No promotions found in the system.");
+            System.out.println("\n[!] No promotions found in the system.");
         } else {
             var activePromos = allPromotions.stream().filter(Promotion::isActive).toList();
             var inactivePromos = allPromotions.stream().filter(p -> !p.isActive()).toList();
             
-            System.out.println("\n📗 ACTIVE PROMOTIONS (" + activePromos.size() + "):");
+            System.out.println("\n[A] ACTIVE PROMOTIONS (" + activePromos.size() + "):");
             if (activePromos.isEmpty()) {
                 System.out.println("No active promotions.");
             } else {
                 activePromos.forEach(p -> System.out.println("\n" + p));
             }
             
-            System.out.println("\n📕 INACTIVE PROMOTIONS (" + inactivePromos.size() + "):");
+            System.out.println("\n[I] INACTIVE PROMOTIONS (" + inactivePromos.size() + "):");
             if (inactivePromos.isEmpty()) {
                 System.out.println("No inactive promotions.");
             } else {
@@ -506,11 +506,11 @@ public class ConsoleUI {
             );
             
             service.addPromotion(p);
-            System.out.println("\n✓ Group discount created successfully!");
+            System.out.println("\nGroup discount created successfully!");
             System.out.println(p);
             
         } catch (Exception e) {
-            System.out.println("❌ Error creating promotion: " + e.getMessage());
+            System.out.println("Error creating promotion: " + e.getMessage());
         }
         pressEnterToContinue();
     }
@@ -538,11 +538,11 @@ public class ConsoleUI {
             );
             
             service.addPromotion(p);
-            System.out.println("\n✓ Long-term rental discount created successfully!");
+            System.out.println("\n+ Long-term rental discount created successfully!");
             System.out.println(p);
             
         } catch (Exception e) {
-            System.out.println("❌ Error creating promotion: " + e.getMessage());
+            System.out.println("Error creating promotion: " + e.getMessage());
         }
         pressEnterToContinue();
     }
@@ -551,7 +551,7 @@ public class ConsoleUI {
         printHeader("ACTIVATE/DEACTIVATE PROMOTION");
         var allPromotions = service.getAllPromotions();
         if (allPromotions.isEmpty()) {
-            System.out.println("\n📭 No promotions found in the system.");
+            System.out.println("\n[!] No promotions found in the system.");
             pressEnterToContinue();
             return;
         }
@@ -569,14 +569,14 @@ public class ConsoleUI {
             Promotion selected = allPromotions.get(idx);
             if (selected.isActive()) {
                 service.deactivatePromotion(selected.getCode());
-                System.out.println("\n✓ Promotion " + selected.getCode() + " has been deactivated.");
+                System.out.println("\n+ Promotion " + selected.getCode() + " has been deactivated.");
             } else {
                 service.activatePromotion(selected.getCode());
-                System.out.println("\n✓ Promotion " + selected.getCode() + " has been activated.");
+                System.out.println("\n+ Promotion " + selected.getCode() + " has been activated.");
             }
             
         } catch (Exception e) {
-            System.out.println("❌ Error: " + e.getMessage());
+            System.out.println("Error: " + e.getMessage());
         }
         pressEnterToContinue();
     }

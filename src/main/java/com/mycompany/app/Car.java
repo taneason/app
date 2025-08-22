@@ -18,15 +18,15 @@ public class Car extends Vehicle {
 
     @Override
     public String toString() {
-        return "╭──────────────────────────────────────────────╮\n" +
-               "│ Vehicle ID: " + getVehicleId() + 
-               "\n│ Model: " + getModel() +
-               "\n│ Type: " + getType() +
-               "\n│ Daily Rate: RM" + getDailyRate() +
-               "\n│ Status: " + (isAvailable() ? "Available" : "Rented") +
-               "\n│" +
-               "\n│ Features:" +
-               "\n│ • Passenger Capacity: " + getPassengerCapacity() + " people" +
-               "\n╰──────────────────────────────────────────────╯";
+        return "+----------------------------------------------+\n" +
+               "| Vehicle ID: " + getVehicleId() + 
+               "\n| Model: " + getModel() +
+               "\n| Type: " + getType() +
+               "\n| Daily Rate: RM" + getDailyRate() +
+               "\n| Status: " + (isAvailable() ? "Available" : "Rented") +
+               "\n|" +
+               "\n| Features:" +
+               "\n| - Passenger Capacity: " + getPassengerCapacity() + " people" +
+               "\n+----------------------------------------------+";
     }
 }
