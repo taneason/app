@@ -154,24 +154,65 @@ enum VanType {
     EXECUTIVE
 }
 
+' Driver service classes
+class Driver {
+    - driverId: String
+    - name: String
+    - licenseNumber: String
+    - experienceYears: int
+    - dailyRate: double
+    - available: boolean
+    - driverType: DriverType
+    --
+    + Driver(String, String, String, int, DriverType)
+    + getDriverId(): String
+    + getName(): String
+    + getLicenseNumber(): String
+    + getExperienceYears(): int
+    + getDailyRate(): double
+    + isAvailable(): boolean
+    + setAvailable(boolean): void
+    + getDriverType(): DriverType
+    - calculateDailyRate(): double
+    + toString(): String
+}
+
+enum DriverType {
+    STANDARD("Standard Driver", 50.0)
+    PROFESSIONAL("Professional Driver", 80.0)
+    LUXURY("Luxury Driver", 120.0)
+    --
+    - displayName: String
+    - baseRate: double
+    --
+    + getDisplayName(): String
+    + getBaseRate(): double
+}
+
 ' Core business classes
 class Booking {
     - bookingId: String
     - customer: Customer
     - vehicle: Vehicle
+    - assignedDriver: Driver
     - startDate: LocalDate
     - durationDays: int
     - returned: boolean
     - appliedGroupPromotion: Promotion
     - appliedLongTermPromotion: Promotion
     - finalCharge: double
+    - appliedLoyaltyDiscount: double
+    - tierAtBooking: CustomerTier
     --
-    + Booking(String, Customer, Vehicle, LocalDate, int, Promotion, Promotion)
+    + Booking(String, Customer, Vehicle, LocalDate, int, Promotion, Promotion, Driver)
     + getBookingId(): String
     + getCustomer(): Customer
     + getVehicle(): Vehicle
+    + getAssignedDriver(): Driver
+    + hasDriver(): boolean
     + isReturned(): boolean
     + getDurationDays(): int
+    + getAppliedLoyaltyDiscount(): double
     + calculateCharge(): double
     + returnVehicle(): void
     + getAppliedGroupPromotion(): Promotion
@@ -206,6 +247,7 @@ class RentalService {
     - admins: DynamicArray<Admin>
     - bookings: DynamicArray<Booking>
     - promotions: DynamicArray<Promotion>
+    - drivers: DynamicArray<Driver>
     --
     + RentalService()
     + addVehicle(Vehicle): void
@@ -218,6 +260,7 @@ class RentalService {
     + addAdmin(Admin): void
     + findAdminByEmail(String): Admin
     + rentVehicle(Customer, Vehicle, int, int): Booking
+    + rentVehicleWithDriver(Customer, Vehicle, int, int, Driver): Booking
     + returnVehicle(String): void
     + getBookings(): List<Booking>
     + getBookingsByCustomer(Customer): List<Booking>
@@ -226,6 +269,11 @@ class RentalService {
     + getActivePromotions(): List<Promotion>
     + activatePromotion(String): void
     + deactivatePromotion(String): void
+    + addDriver(Driver): void
+    + getDrivers(): List<Driver>
+    + getAvailableDrivers(): List<Driver>
+    + getAvailableDriversByType(DriverType): List<Driver>
+    + findDriverById(String): Driver
     + nextCustomerId(): String
     + nextVehicleId(): String
     + nextBookingId(): String
@@ -288,6 +336,8 @@ class ConsoleUI {
     - generateReports(): void
     - addVehicle(): void
     - deleteVehicle(): void
+    - addDriver(): void
+    - viewAllDrivers(): void
     - setPromotions(): void
 }
 
@@ -307,6 +357,7 @@ Customer o-- CustomerTier : has
 Admin o-- AdminLevel : has
 Car o-- CarType : has
 Van o-- VanType : has
+Driver o-- DriverType : has
 
 ' Composition (part cannot exist without whole) - *--
 RentalService *-- Vehicle : contains
@@ -314,11 +365,14 @@ RentalService *-- Customer : contains
 RentalService *-- Admin : contains
 RentalService *-- Booking : contains
 RentalService *-- Promotion : contains
+RentalService *-- Driver : contains
 RentalService *-- DynamicArray : uses
 
 ' Association (uses/references) - -->
 Booking --> Customer : customer
 Booking --> Vehicle : vehicle
+Booking --> Driver : assignedDriver
+Booking --> CustomerTier : tierAtBooking
 Booking --> Promotion : appliedGroupPromotion
 Booking --> Promotion : appliedLongTermPromotion
 
@@ -326,18 +380,5 @@ Booking --> Promotion : appliedLongTermPromotion
 ReportGenerator ..> RentalService : depends on
 ConsoleUI ..> RentalService : depends on
 
-note right of Booking::calculateFinalCharge
-  Applies discounts in sequence:
-  1. Group Promotion
-  2. Long-term Promotion  
-  3. Customer Loyalty Discount
-end note
-
-note top of CustomerTier
-  Bronze: 0 rentals, 0% discount
-  Silver: 5+ rentals, 5% discount
-  Gold: 15+ rentals, 10% discount
-  Platinum: 30+ rentals, 15% discount
-end note
 
 @enduml

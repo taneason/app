@@ -9,6 +9,7 @@ package com.mycompany.app;
  * @author User
  */
 import java.time.LocalDate;
+import com.mycompany.app.Customer.CustomerTier;
 
 public class Booking {
     private final String bookingId;
@@ -19,10 +20,13 @@ public class Booking {
     private boolean returned = false;
     private Promotion appliedGroupPromotion;
     private Promotion appliedLongTermPromotion;
+    private Driver assignedDriver; // Optional driver
     private double finalCharge;
+    private double appliedLoyaltyDiscount = 0; // Track actual loyalty discount applied
+    private CustomerTier tierAtBooking; // Store tier at time of booking
 
     public Booking(String bookingId, Customer customer, Vehicle vehicle, LocalDate startDate, 
-                  int durationDays, Promotion groupPromotion, Promotion longTermPromotion) {
+                  int durationDays, Promotion groupPromotion, Promotion longTermPromotion, Driver driver) {
         this.bookingId = bookingId;
         this.customer = customer;
         this.vehicle = vehicle;
@@ -30,6 +34,8 @@ public class Booking {
         this.durationDays = durationDays;
         this.appliedGroupPromotion = groupPromotion;
         this.appliedLongTermPromotion = longTermPromotion;
+        this.assignedDriver = driver;
+        this.tierAtBooking = customer.getTier(); // Store current tier at booking time
         vehicle.setAvailable(false);
         calculateFinalCharge();
     }
@@ -39,10 +45,17 @@ public class Booking {
     public Vehicle getVehicle() { return vehicle; }
     public boolean isReturned() { return returned; }
     public int getDurationDays() { return durationDays; }
+    public Driver getAssignedDriver() { return assignedDriver; }
+    public boolean hasDriver() { return assignedDriver != null; }
 
     private void calculateFinalCharge() {
         double baseCharge = durationDays * vehicle.getDailyRate();
         finalCharge = baseCharge;
+        
+        // Add driver cost if driver is assigned
+        if (assignedDriver != null) {
+            finalCharge += durationDays * assignedDriver.getDailyRate();
+        }
         
         // Apply group discount
         if (appliedGroupPromotion != null && appliedGroupPromotion.isActive()) {
@@ -56,7 +69,8 @@ public class Booking {
         
         // Apply customer loyalty discount (can stack with other discounts)
         if (customer.getLoyaltyDiscount() > 0) {
-            finalCharge = finalCharge * (1 - customer.getLoyaltyDiscount() / 100);
+            appliedLoyaltyDiscount = customer.getLoyaltyDiscount();
+            finalCharge = finalCharge * (1 - appliedLoyaltyDiscount / 100);
         }
     }
 
@@ -75,6 +89,10 @@ public class Booking {
     
     public Promotion getAppliedLongTermPromotion() {
         return appliedLongTermPromotion;
+    }
+
+    public double getAppliedLoyaltyDiscount() {
+        return appliedLoyaltyDiscount;
     }
 
     @Override
@@ -99,6 +117,14 @@ public class Booking {
         double baseCharge = durationDays * vehicle.getDailyRate();
         sb.append("| - Base Rate: RM").append(String.format("%.2f", baseCharge)).append("\n");
         
+        // Show driver information if driver is assigned
+        if (assignedDriver != null) {
+            double driverCost = durationDays * assignedDriver.getDailyRate();
+            sb.append("| - Driver: ").append(assignedDriver.getName())
+              .append(" (").append(assignedDriver.getDriverType()).append(")\n");
+            sb.append("| - Driver Cost: RM").append(String.format("%.2f", driverCost)).append("\n");
+        }
+        
         // Show applied promotions
         boolean hasDiscounts = false;
         if (appliedGroupPromotion != null && appliedGroupPromotion.isActive()) {
@@ -115,15 +141,19 @@ public class Booking {
             hasDiscounts = true;
         }
         
-        if (customer.getLoyaltyDiscount() > 0) {
-            sb.append("| - Loyalty Discount (").append(customer.getTier().getDisplayName())
-              .append("): ").append(String.format("%.1f", customer.getLoyaltyDiscount()))
+        if (customer.getLoyaltyDiscount() > 0 && appliedLoyaltyDiscount > 0) {
+            sb.append("| - Loyalty Discount (").append(tierAtBooking.getDisplayName())
+              .append("): ").append(String.format("%.1f", appliedLoyaltyDiscount))
               .append("% off\n");
             hasDiscounts = true;
         }
         
         if (hasDiscounts) {
-            double totalSavings = baseCharge - finalCharge;
+            double totalCostBeforeDiscounts = baseCharge;
+            if (assignedDriver != null) {
+                totalCostBeforeDiscounts += durationDays * assignedDriver.getDailyRate();
+            }
+            double totalSavings = totalCostBeforeDiscounts - finalCharge;
             sb.append("| - Total Savings: RM").append(String.format("%.2f", totalSavings)).append("\n");
         }
         

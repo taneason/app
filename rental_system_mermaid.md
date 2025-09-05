@@ -140,21 +140,60 @@ classDiagram
         EXECUTIVE
     }
 
+    %% Driver service classes
+    class Driver {
+        -String driverId
+        -String name
+        -String licenseNumber
+        -int experienceYears
+        -double dailyRate
+        -boolean available
+        -DriverType driverType
+        +Driver(String, String, String, int, DriverType)
+        +getDriverId() String
+        +getName() String
+        +getLicenseNumber() String
+        +getExperienceYears() int
+        +getDailyRate() double
+        +isAvailable() boolean
+        +setAvailable(boolean) void
+        +getDriverType() DriverType
+        -calculateDailyRate() double
+        +toString() String
+    }
+
+    class DriverType {
+        <<enumeration>>
+        STANDARD
+        PROFESSIONAL
+        LUXURY
+        -String displayName
+        -double baseRate
+        +getDisplayName() String
+        +getBaseRate() double
+    }
+
     %% Core business classes
     class Booking {
         -String bookingId
         -Customer customer
         -Vehicle vehicle
+        -Driver assignedDriver
         -LocalDate startDate
         -int durationDays
         -boolean returned
         -Promotion appliedGroupPromotion
         -Promotion appliedLongTermPromotion
         -double finalCharge
+        -double appliedLoyaltyDiscount
+        -CustomerTier tierAtBooking
         +Booking(...)
         +getBookingId() String
         +getCustomer() Customer
         +getVehicle() Vehicle
+        +getAssignedDriver() Driver
+        +hasDriver() boolean
+        +getAppliedLoyaltyDiscount() double
         +calculateCharge() double
         +returnVehicle() void
         -calculateFinalCharge() void
@@ -183,14 +222,18 @@ classDiagram
         -DynamicArray~Admin~ admins
         -DynamicArray~Booking~ bookings
         -DynamicArray~Promotion~ promotions
+        -DynamicArray~Driver~ drivers
         +addVehicle(Vehicle) void
         +deleteVehicle(String) boolean
         +getVehicles() List~Vehicle~
         +addCustomer(Customer) void
         +rentVehicle(...) Booking
+        +rentVehicleWithDriver(...) Booking
         +returnVehicle(String) void
         +getBookings() List~Booking~
         +addPromotion(Promotion) void
+        +addDriver(Driver) void
+        +getAvailableDrivers() List~Driver~
     }
 
     class DynamicArray~T~ {
@@ -222,6 +265,8 @@ classDiagram
         -adminMainMenu(Admin) void
         -rentVehicle() void
         -deleteVehicle() void
+        -addDriver() void
+        -viewAllDrivers() void
         -viewProfile() void
     }
 
@@ -241,6 +286,7 @@ classDiagram
     Admin o-- AdminLevel : has
     Car o-- CarType : has
     Van o-- VanType : has
+    Driver o-- DriverType : has
 
     %% Composition (part cannot exist without whole) - *--
     RentalService *-- Vehicle : contains
@@ -248,10 +294,13 @@ classDiagram
     RentalService *-- Admin : contains
     RentalService *-- Booking : contains
     RentalService *-- Promotion : contains
+    RentalService *-- Driver : contains
 
     %% Association (uses/references) - -->
     Booking --> Customer : customer
     Booking --> Vehicle : vehicle
+    Booking --> Driver : assignedDriver
+    Booking --> CustomerTier : tierAtBooking
     Booking --> Promotion : appliedGroupPromotion
     Booking --> Promotion : appliedLongTermPromotion
 

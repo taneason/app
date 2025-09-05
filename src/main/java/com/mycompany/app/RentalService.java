@@ -11,6 +11,7 @@ package com.mycompany.app;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import com.mycompany.app.Driver.DriverType;
 
 public class RentalService {
     private final List<Customer> customers = new ArrayList<>();
@@ -18,6 +19,7 @@ public class RentalService {
     private final List<Vehicle> vehicles = new ArrayList<>();
     private final List<Booking> bookings = new ArrayList<>();
     private final List<Promotion> promotions = new ArrayList<>();
+    private final List<Driver> drivers = new ArrayList<>();
 
     private int custSeq = 100;
     private int adminSeq = 900;
@@ -113,7 +115,49 @@ public class RentalService {
             }
         }
         
-        Booking b = new Booking(nextBookingId(), c, v, LocalDate.now(), days, groupPromo, longTermPromo);
+        Booking b = new Booking(nextBookingId(), c, v, LocalDate.now(), days, groupPromo, longTermPromo, null);
+        bookings.add(b);
+        
+        // Update customer statistics immediately when booking is created
+        c.addRental(b.calculateCharge());
+        
+        return b;
+    }
+
+    // Overloaded method for booking with optional driver
+    public Booking rentVehicleWithDriver(Customer c, Vehicle v, int days, int groupSize, Driver driver) {
+        if (!v.isAvailable()) throw new IllegalStateException("Vehicle not available.");
+        if (driver != null && !driver.isAvailable()) throw new IllegalStateException("Driver not available.");
+        
+        if (groupSize > v.getPassengerCapacity()) {
+            throw new IllegalArgumentException("Group size exceeds vehicle capacity of " + 
+                v.getPassengerCapacity() + " passengers");
+        }
+        
+        // Find applicable promotions (can apply multiple)
+        Promotion groupPromo = null;
+        Promotion longTermPromo = null;
+        
+        for (Promotion p : getActivePromotions()) {
+            // Check for group discount
+            if (p.getType().equals("GROUP") && groupSize >= p.getThreshold()) {
+                if (groupPromo == null || p.getDiscountPercentage() > groupPromo.getDiscountPercentage()) {
+                    groupPromo = p;
+                }
+            }
+            // Check for long-term discount
+            else if (p.getType().equals("LONG_TERM") && days >= p.getThreshold()) {
+                if (longTermPromo == null || p.getDiscountPercentage() > longTermPromo.getDiscountPercentage()) {
+                    longTermPromo = p;
+                }
+            }
+        }
+        
+        if (driver != null) {
+            driver.setAvailable(false);
+        }
+        
+        Booking b = new Booking(nextBookingId(), c, v, LocalDate.now(), days, groupPromo, longTermPromo, driver);
         bookings.add(b);
         
         // Update customer statistics immediately when booking is created
@@ -126,8 +170,18 @@ public class RentalService {
         Booking b = bookings.stream().filter(x -> x.getBookingId().equals(bookingId)).findFirst().orElse(null);
         if (b != null && !b.isReturned()) {
             b.returnVehicle();
+            
+            // Return driver if one was assigned
+            if (b.hasDriver()) {
+                b.getAssignedDriver().setAvailable(true);
+            }
+            
             System.out.println("\n=========== RETURN SUMMARY ===========");
             System.out.println("Vehicle: " + b.getVehicle().getModel());
+            if (b.hasDriver()) {
+                System.out.println("Driver: " + b.getAssignedDriver().getName() + 
+                    " (" + b.getAssignedDriver().getDriverType() + ")");
+            }
             System.out.println("Duration: " + b.getDurationDays() + " days");
             
             // Show applied promotions
@@ -181,5 +235,33 @@ public class RentalService {
                 .filter(p -> p.getCode().equals(code))
                 .findFirst()
                 .ifPresent(p -> p.setActive(true));
+    }
+
+    // --- Driver Management ---
+    public void addDriver(Driver driver) {
+        drivers.add(driver);
+    }
+
+    public List<Driver> getDrivers() {
+        return drivers;
+    }
+
+    public List<Driver> getAvailableDrivers() {
+        return drivers.stream()
+                .filter(Driver::isAvailable)
+                .toList();
+    }
+
+    public List<Driver> getAvailableDriversByType(DriverType type) {
+        return drivers.stream()
+                .filter(d -> d.isAvailable() && d.getDriverType() == type)
+                .toList();
+    }
+
+    public Driver findDriverById(String driverId) {
+        return drivers.stream()
+                .filter(d -> d.getDriverId().equals(driverId))
+                .findFirst()
+                .orElse(null);
     }
 }

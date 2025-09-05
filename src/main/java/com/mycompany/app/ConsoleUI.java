@@ -216,12 +216,46 @@ public class ConsoleUI {
             int groupSize = ValidationUtil.getValidatedInteger(sc, "Enter number of passengers (1-" + 
                 selectedVehicle.getPassengerCapacity() + "): ", 1, selectedVehicle.getPassengerCapacity());
 
+            // Driver selection
+            Driver selectedDriver = null;
+            String wantDriver = ValidationUtil.getValidatedInput(sc, "\nWould you like to hire a driver? (yes/no): ", input -> {
+                if (!input.toLowerCase().matches("^(yes|no)$")) {
+                    throw new IllegalArgumentException("Please enter 'yes' or 'no'");
+                }
+            });
+            
+            if (wantDriver.toLowerCase().equals("yes")) {
+                var availableDrivers = service.getAvailableDrivers();
+                if (availableDrivers.isEmpty()) {
+                    System.out.println("\n[!] Sorry, no drivers are currently available.");
+                    System.out.println("Proceeding with booking without driver...");
+                } else {
+                    System.out.println("\n--- Available Drivers ---");
+                    for (int i = 0; i < availableDrivers.size(); i++) {
+                        System.out.println((i + 1) + ". " + availableDrivers.get(i));
+                    }
+                    
+                    int driverIdx = ValidationUtil.getValidatedInteger(sc, 
+                        "\nSelect driver (1-" + availableDrivers.size() + "): ", 
+                        1, availableDrivers.size()) - 1;
+                    selectedDriver = availableDrivers.get(driverIdx);
+                }
+            }
+
             // Confirm booking
-            double totalCost = duration * selectedVehicle.getDailyRate();
+            double vehicleCost = duration * selectedVehicle.getDailyRate();
+            double driverCost = selectedDriver != null ? duration * selectedDriver.getDailyRate() : 0;
+            double totalCost = vehicleCost + driverCost;
+            
             System.out.println("\nBooking Summary:");
             System.out.println("Vehicle: " + selectedVehicle.getModel());
             System.out.println("Duration: " + duration + " days");
-            System.out.println("Total Cost: RM" + totalCost);
+            System.out.println("Vehicle Cost: RM" + String.format("%.2f", vehicleCost));
+            if (selectedDriver != null) {
+                System.out.println("Driver: " + selectedDriver.getName() + " (" + selectedDriver.getDriverType() + ")");
+                System.out.println("Driver Cost: RM" + String.format("%.2f", driverCost));
+            }
+            System.out.println("Total Cost: RM" + String.format("%.2f", totalCost));
             
             String confirm = ValidationUtil.getValidatedInput(sc, "\nConfirm booking (yes/no)? ", input -> {
                 if (!input.toLowerCase().matches("^(yes|no)$")) {
@@ -230,7 +264,12 @@ public class ConsoleUI {
             });
             
             if (confirm.toLowerCase().equals("yes")) {
-                Booking booking = service.rentVehicle(currentCustomer, selectedVehicle, duration, groupSize);
+                Booking booking;
+                if (selectedDriver != null) {
+                    booking = service.rentVehicleWithDriver(currentCustomer, selectedVehicle, duration, groupSize, selectedDriver);
+                } else {
+                    booking = service.rentVehicle(currentCustomer, selectedVehicle, duration, groupSize);
+                }
                 System.out.println("\nBooking created successfully!");
                 System.out.println("Booking ID: " + booking.getBookingId());
                 System.out.println(booking.detailed());
@@ -339,23 +378,27 @@ public class ConsoleUI {
                 System.out.println("1. Add New Vehicle");
                 System.out.println("2. View All Vehicles");
                 System.out.println("3. Delete Vehicle");
-                System.out.println("4. View All Bookings");
-                System.out.println("5. Manage Pricing");
-                System.out.println("6. Set Promotions");
-                System.out.println("7. Generate Reports");
+                System.out.println("4. Add New Driver");
+                System.out.println("5. View All Drivers");
+                System.out.println("6. View All Bookings");
+                System.out.println("7. Manage Pricing");
+                System.out.println("8. Set Promotions");
+                System.out.println("9. Generate Reports");
                 System.out.println("0. Logout");
                 System.out.println(LINE);
                 
-                int choice = ValidationUtil.getValidatedInteger(sc, "Please select an option: ", 0, 7);
+                int choice = ValidationUtil.getValidatedInteger(sc, "Please select an option: ", 0, 9);
                 
                 switch (choice) {
                     case 1 -> addVehicle();
                     case 2 -> viewAllVehicles();
                     case 3 -> deleteVehicle();
-                    case 4 -> viewAllBookings();
-                    case 5 -> managePricing();
-                    case 6 -> setPromotions();
-                    case 7 -> generateReports();
+                    case 4 -> addDriver();
+                    case 5 -> viewAllDrivers();
+                    case 6 -> viewAllBookings();
+                    case 7 -> managePricing();
+                    case 8 -> setPromotions();
+                    case 9 -> generateReports();
                     case 0 -> { return; }
                 }
             } catch (Exception e) {
@@ -789,6 +832,89 @@ public class ConsoleUI {
             System.out.printf("Average Booking Value: RM%.2f%n", totalRevenue / bookings.size());
         }
         
+        pressEnterToContinue();
+    }
+
+    private void addDriver() {
+        try {
+            printHeader("ADD NEW DRIVER");
+            
+            System.out.println("Enter driver details:");
+            String name = ValidationUtil.getValidatedInput(sc, "Driver Name: ", input -> {
+                if (input.trim().length() < 2) {
+                    throw new IllegalArgumentException("Name must be at least 2 characters");
+                }
+            });
+            
+            String licenseNumber = ValidationUtil.getValidatedInput(sc, "License Number: ", input -> {
+                if (input.trim().length() < 5) {
+                    throw new IllegalArgumentException("License number must be at least 5 characters");
+                }
+            });
+            
+            int experienceYears = ValidationUtil.getValidatedInteger(sc, "Years of Experience (0-50): ", 0, 50);
+            
+            System.out.println("\nDriver Types:");
+            System.out.println("1. STANDARD - RM 50 base rate");
+            System.out.println("2. PROFESSIONAL - RM 80 base rate"); 
+            System.out.println("3. LUXURY - RM 120 base rate");
+            
+            int typeChoice = ValidationUtil.getValidatedInteger(sc, "Select driver type (1-3): ", 1, 3);
+            
+            Driver.DriverType driverType = switch (typeChoice) {
+                case 1 -> Driver.DriverType.STANDARD;
+                case 2 -> Driver.DriverType.PROFESSIONAL;
+                case 3 -> Driver.DriverType.LUXURY;
+                default -> Driver.DriverType.STANDARD;
+            };
+            
+            // Generate driver ID
+            String driverId = "D" + String.format("%03d", service.getDrivers().size() + 1);
+            
+            Driver newDriver = new Driver(driverId, name, licenseNumber, experienceYears, driverType);
+            service.addDriver(newDriver);
+            
+            System.out.println("\n✓ Driver added successfully!");
+            System.out.println("Driver ID: " + driverId);
+            System.out.println("Daily Rate: RM" + String.format("%.2f", newDriver.getDailyRate()));
+            
+        } catch (Exception e) {
+            System.out.println("Error adding driver: " + e.getMessage());
+        }
+        pressEnterToContinue();
+    }
+
+    private void viewAllDrivers() {
+        try {
+            printHeader("ALL DRIVERS");
+            var drivers = service.getDrivers();
+            
+            if (drivers.isEmpty()) {
+                System.out.println("No drivers in the system.");
+            } else {
+                System.out.println("Available Drivers:");
+                for (Driver driver : drivers) {
+                    if (driver.isAvailable()) {
+                        System.out.println("✓ " + driver);
+                    }
+                }
+                
+                System.out.println("\nUnavailable Drivers:");
+                for (Driver driver : drivers) {
+                    if (!driver.isAvailable()) {
+                        System.out.println("✗ " + driver);
+                    }
+                }
+                
+                System.out.println("\nTotal Drivers: " + drivers.size());
+                long availableCount = drivers.stream().filter(Driver::isAvailable).count();
+                System.out.println("Available: " + availableCount);
+                System.out.println("Busy: " + (drivers.size() - availableCount));
+            }
+            
+        } catch (Exception e) {
+            System.out.println("Error viewing drivers: " + e.getMessage());
+        }
         pressEnterToContinue();
     }
 }

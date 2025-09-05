@@ -34,6 +34,13 @@ public class App {
         // Admin Staff
         rs.addAdmin(new Admin(rs.nextAdminId(), "Fleet Manager", "admin@mail.com", "1234"));
         
+        // Sample Drivers
+        rs.addDriver(new Driver("D001", "Ahmad Rahman", "LIC001234", 5, Driver.DriverType.STANDARD));
+        rs.addDriver(new Driver("D002", "Lee Wei Ming", "LIC005678", 8, Driver.DriverType.PROFESSIONAL));
+        rs.addDriver(new Driver("D003", "Rajesh Kumar", "LIC009876", 12, Driver.DriverType.LUXURY));
+        rs.addDriver(new Driver("D004", "Fatimah Hassan", "LIC004321", 3, Driver.DriverType.STANDARD));
+        rs.addDriver(new Driver("D005", "Chen Wei Lun", "LIC008765", 15, Driver.DriverType.LUXURY));
+        
         // Initial Promotions
         rs.addPromotion(new Promotion(rs.nextPromotionCode(), "LONG_TERM", 
             "Weekly Special: Rent 7 days or more for special discount!", 15.0, 7));
