@@ -64,6 +64,22 @@ public class RentalService {
 
     // --- Vehicle ---
     public void addVehicle(Vehicle v) { vehicles.add(v); }
+    
+    public boolean deleteVehicle(String vehicleId) {
+        // Check if vehicle has active bookings
+        boolean hasActiveBookings = bookings.stream()
+            .anyMatch(b -> b.getVehicle().getVehicleId().equals(vehicleId) && !b.isReturned());
+        
+        if (hasActiveBookings) {
+            throw new IllegalStateException("Cannot delete vehicle with active bookings");
+        }
+        
+        // Remove the vehicle
+        return vehicles.remove(vehicles.stream()
+            .filter(v -> v.getVehicleId().equals(vehicleId))
+            .findFirst()
+            .orElse(null));
+    }
     public List<Vehicle> getVehicles() { return vehicles; }
     public List<Vehicle> getAvailableVehicles() {
         return vehicles.stream().filter(Vehicle::isAvailable).toList();
@@ -78,27 +94,31 @@ public class RentalService {
                 v.getPassengerCapacity() + " passengers");
         }
         
-        // Find applicable promotion
-        Promotion applicablePromo = null;
-        double bestDiscount = 0;
+        // Find applicable promotions (can apply multiple)
+        Promotion groupPromo = null;
+        Promotion longTermPromo = null;
         
         for (Promotion p : getActivePromotions()) {
             // Check for group discount
-            if (p.getType().equals("GROUP") && groupSize >= p.getThreshold() && 
-                p.getDiscountPercentage() > bestDiscount) {
-                applicablePromo = p;
-                bestDiscount = p.getDiscountPercentage();
+            if (p.getType().equals("GROUP") && groupSize >= p.getThreshold()) {
+                if (groupPromo == null || p.getDiscountPercentage() > groupPromo.getDiscountPercentage()) {
+                    groupPromo = p;
+                }
             }
             // Check for long-term discount
-            else if (p.getType().equals("LONG_TERM") && days >= p.getThreshold() && 
-                     p.getDiscountPercentage() > bestDiscount) {
-                applicablePromo = p;
-                bestDiscount = p.getDiscountPercentage();
+            else if (p.getType().equals("LONG_TERM") && days >= p.getThreshold()) {
+                if (longTermPromo == null || p.getDiscountPercentage() > longTermPromo.getDiscountPercentage()) {
+                    longTermPromo = p;
+                }
             }
         }
         
-        Booking b = new Booking(nextBookingId(), c, v, LocalDate.now(), days, applicablePromo);
+        Booking b = new Booking(nextBookingId(), c, v, LocalDate.now(), days, groupPromo, longTermPromo);
         bookings.add(b);
+        
+        // Update customer statistics immediately when booking is created
+        c.addRental(b.calculateCharge());
+        
         return b;
     }
 
@@ -106,15 +126,22 @@ public class RentalService {
         Booking b = bookings.stream().filter(x -> x.getBookingId().equals(bookingId)).findFirst().orElse(null);
         if (b != null && !b.isReturned()) {
             b.returnVehicle();
-            System.out.println("\n═══════════ RETURN SUMMARY ═══════════");
+            System.out.println("\n=========== RETURN SUMMARY ===========");
             System.out.println("Vehicle: " + b.getVehicle().getModel());
             System.out.println("Duration: " + b.getDurationDays() + " days");
-            if (b.getAppliedPromotion() != null && b.getAppliedPromotion().isActive()) {
-                System.out.println("Applied Promotion: " + b.getAppliedPromotion().getCode() + 
-                    " (" + String.format("%.1f", b.getAppliedPromotion().getDiscountPercentage()) + "% off)");
+            
+            // Show applied promotions
+            if (b.getAppliedGroupPromotion() != null && b.getAppliedGroupPromotion().isActive()) {
+                System.out.println("Group Promotion: " + b.getAppliedGroupPromotion().getCode() + 
+                    " (" + String.format("%.1f", b.getAppliedGroupPromotion().getDiscountPercentage()) + "% off)");
             }
+            if (b.getAppliedLongTermPromotion() != null && b.getAppliedLongTermPromotion().isActive()) {
+                System.out.println("Long-term Promotion: " + b.getAppliedLongTermPromotion().getCode() + 
+                    " (" + String.format("%.1f", b.getAppliedLongTermPromotion().getDiscountPercentage()) + "% off)");
+            }
+            
             System.out.println("Final Charge: RM" + String.format("%.2f", b.calculateCharge()));
-            System.out.println("═════════════════════════════════════");
+            System.out.println("=====================================");
         } else {
             throw new IllegalArgumentException("Invalid booking or already returned.");
         }

@@ -28,21 +28,21 @@ public class Promotion {
 
     @Override
     public String toString() {
-        return "╭──────────────── PROMOTION ────────────────╮\n" +
-               "│ Code: " + code + "\n" +
-               "│ Type: " + (type.equals("GROUP") ? "Group Discount" : "Long-term Rental") + "\n" +
-               "│ Description: " + description + "\n" +
-               "│ Discount: " + String.format("%.1f%%", discountPercentage) + "\n" +
-               "│ Requirement: " + formatThreshold() + "\n" +
-               "│ Status: " + (active ? "✓ Active" : "✗ Inactive") + "\n" +
-               "╰────────────────────────────────────────────╯";
+        return "+------------- PROMOTION -------------+\n" +
+               "| Code: " + code + "\n" +
+               "| Type: " + (type.equals("GROUP") ? "Group Discount" : "Long-term Rental") + "\n" +
+               "| Description: " + description + "\n" +
+               "| Discount: " + String.format("%.1f%%", discountPercentage) + "\n" +
+               "| Requirement: " + formatThreshold() + "\n" +
+               "| Status: " + (active ? "+ Active" : "- Inactive") + "\n" +
+               "+------------------------------------+";
     }
 
     private String formatThreshold() {
         if (type.equals("GROUP")) {
-            return "Group size ≥ " + threshold + " people";
+            return "Group size >= " + threshold + " people";
         } else {
-            return "Rental duration ≥ " + threshold + " days";
+            return "Rental duration >= " + threshold + " days";
         }
     }
 }

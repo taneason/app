@@ -1,0 +1,343 @@
+@startuml Vehicle_Rental_System_Class_Diagram
+!theme plain
+skinparam classAttributeIconSize 0
+skinparam classFontStyle bold
+title Vehicle Rental System - Class Diagram
+
+' Abstract classes and interfaces
+abstract class Person {
+    # id: String
+    # name: String
+    # email: String
+    # phone: String
+    # isLoggedIn: boolean
+    --
+    + Person(String, String, String, String)
+    + login(String, String): boolean
+    + logout(): void
+    + getRole(): String
+    + hasPermission(String): boolean
+    # authenticate(String, String): boolean {abstract}
+    # onLoginSuccess(): void {abstract}
+    # onLogout(): void {abstract}
+}
+
+interface Rentable {
+    + isAvailable(): boolean
+    + setAvailable(boolean): void
+    + getDailyRate(): double
+    + getRentalInfo(): String
+    + performMaintenance(): void
+}
+
+' Main vehicle hierarchy
+abstract class Vehicle {
+    - vehicleId: String
+    - model: String
+    - available: boolean
+    - dailyRate: double
+    - passengerCapacity: int
+    - totalRentals: int
+    --
+    + Vehicle(String, String, double, int)
+    + getVehicleId(): String
+    + getModel(): String
+    + getDailyRate(): double
+    + setDailyRate(double): void
+    + isAvailable(): boolean
+    + setAvailable(boolean): void
+    + getPassengerCapacity(): int
+    + getTotalRentals(): int
+    + getType(): String {abstract}
+    + getSpecialFeatures(): String {abstract}
+}
+
+class Car {
+    - carType: CarType
+    - hasGPS: boolean
+    - hasAirCon: boolean
+    --
+    + Car(String, String, int, double, CarType, boolean, boolean)
+    + getType(): String
+    + getSpecialFeatures(): String
+    + getCarType(): CarType
+    + hasGPS(): boolean
+    + hasAirCon(): boolean
+}
+
+class Van {
+    - luggageSpace: int
+    - vanType: VanType
+    - hasWifi: boolean
+    - hasTV: boolean
+    --
+    + Van(String, String, int, int, double, VanType, boolean, boolean)
+    + getType(): String
+    + getSpecialFeatures(): String
+    + getLuggageSpace(): int
+    + getVanType(): VanType
+    + hasWifi(): boolean
+    + hasTV(): boolean
+}
+
+' Person hierarchy
+class Customer {
+    - password: String
+    - totalRentals: int
+    - totalSpent: double
+    - tier: CustomerTier
+    --
+    + Customer(String, String, String, String, String)
+    + getRole(): String
+    + hasPermission(String): boolean
+    + authenticate(String, String): boolean
+    + onLoginSuccess(): void
+    + onLogout(): void
+    + addRental(double): void
+    + getLoyaltyDiscount(): double
+    + getTier(): CustomerTier
+    + getCustomerId(): String
+    + getTotalRentals(): int
+    + getTotalSpent(): double
+}
+
+class Admin {
+    - password: String
+    - level: AdminLevel
+    - actionsPerformed: int
+    --
+    + Admin(String, String, String, String)
+    + getRole(): String
+    + hasPermission(String): boolean
+    + authenticate(String, String): boolean
+    + onLoginSuccess(): void
+    + onLogout(): void
+    + recordAction(): void
+    + canPerformAction(): boolean
+    + getAdminId(): String
+    + getLevel(): AdminLevel
+}
+
+' Enumerations
+enum CustomerTier {
+    BRONZE(0, "Bronze", 0.0)
+    SILVER(5, "Silver", 5.0)
+    GOLD(15, "Gold", 10.0)
+    PLATINUM(30, "Platinum", 15.0)
+    --
+    - requiredRentals: int
+    - displayName: String
+    - loyaltyDiscount: double
+    --
+    + getRequiredRentals(): int
+    + getDisplayName(): String
+    + getLoyaltyDiscount(): double
+}
+
+enum AdminLevel {
+    JUNIOR
+    SENIOR
+    MANAGER
+    SUPERVISOR
+}
+
+enum CarType {
+    ECONOMY
+    COMPACT
+    MIDSIZE
+    LUXURY
+}
+
+enum VanType {
+    STANDARD
+    LUXURY
+    EXECUTIVE
+}
+
+' Core business classes
+class Booking {
+    - bookingId: String
+    - customer: Customer
+    - vehicle: Vehicle
+    - startDate: LocalDate
+    - durationDays: int
+    - returned: boolean
+    - appliedGroupPromotion: Promotion
+    - appliedLongTermPromotion: Promotion
+    - finalCharge: double
+    --
+    + Booking(String, Customer, Vehicle, LocalDate, int, Promotion, Promotion)
+    + getBookingId(): String
+    + getCustomer(): Customer
+    + getVehicle(): Vehicle
+    + isReturned(): boolean
+    + getDurationDays(): int
+    + calculateCharge(): double
+    + returnVehicle(): void
+    + getAppliedGroupPromotion(): Promotion
+    + getAppliedLongTermPromotion(): Promotion
+    - calculateFinalCharge(): void
+    + detailed(): String
+}
+
+class Promotion {
+    - code: String
+    - type: String
+    - description: String
+    - discountPercentage: double
+    - threshold: int
+    - active: boolean
+    --
+    + Promotion(String, String, String, double, int)
+    + getCode(): String
+    + getType(): String
+    + getDescription(): String
+    + getDiscountPercentage(): double
+    + getThreshold(): int
+    + isActive(): boolean
+    + setActive(boolean): void
+    + formatThreshold(): String
+}
+
+' Service layer
+class RentalService {
+    - vehicles: DynamicArray<Vehicle>
+    - customers: DynamicArray<Customer>
+    - admins: DynamicArray<Admin>
+    - bookings: DynamicArray<Booking>
+    - promotions: DynamicArray<Promotion>
+    --
+    + RentalService()
+    + addVehicle(Vehicle): void
+    + deleteVehicle(String): boolean
+    + getVehicles(): List<Vehicle>
+    + getAvailableVehicles(): List<Vehicle>
+    + addCustomer(Customer): void
+    + getCustomers(): List<Customer>
+    + loginCustomer(String, String): Customer
+    + addAdmin(Admin): void
+    + findAdminByEmail(String): Admin
+    + rentVehicle(Customer, Vehicle, int, int): Booking
+    + returnVehicle(String): void
+    + getBookings(): List<Booking>
+    + getBookingsByCustomer(Customer): List<Booking>
+    + addPromotion(Promotion): void
+    + getAllPromotions(): List<Promotion>
+    + getActivePromotions(): List<Promotion>
+    + activatePromotion(String): void
+    + deactivatePromotion(String): void
+    + nextCustomerId(): String
+    + nextVehicleId(): String
+    + nextBookingId(): String
+    + nextPromotionCode(): String
+}
+
+' Utility classes
+class "DynamicArray<T>" as DynamicArray {
+    - elements: Object[]
+    - size: int
+    - capacity: int
+    --
+    + DynamicArray()
+    + DynamicArray(int)
+    + add(T): void
+    + add(int, T): void
+    + get(int): T
+    + set(int, T): T
+    + remove(int): T
+    + remove(T): boolean
+    + indexOf(T): int
+    + contains(T): boolean
+    + size(): int
+    + isEmpty(): boolean
+    + clear(): void
+    + filter(Predicate<T>): DynamicArray<T>
+    + toList(): List<T>
+    + iterator(): Iterator<T>
+}
+
+class ReportGenerator {
+    - rentalService: RentalService
+    - dateFormatter: DateTimeFormatter
+    --
+    + ReportGenerator(RentalService)
+    + generateComprehensiveReport(): void
+    + generateVehiclePerformanceReport(): void
+    - generateFleetAnalysis(): void
+    - generateCustomerAnalysis(): void
+    - generateRevenueAnalysis(): void
+    - generatePromotionEffectiveness(): void
+    - calculateTotalDiscount(Booking): double
+}
+
+class ConsoleUI {
+    - service: RentalService
+    - sc: Scanner
+    - currentCustomer: Customer
+    --
+    + ConsoleUI(RentalService)
+    + start(): void
+    - customerLogin(): void
+    - customerMainMenu(): void
+    - adminLogin(): void
+    - adminMainMenu(Admin): void
+    - displayAvailableVehicles(): void
+    - rentVehicle(): void
+    - returnVehicle(): void
+    - viewProfile(): void
+    - generateReports(): void
+    - addVehicle(): void
+    - deleteVehicle(): void
+    - setPromotions(): void
+}
+
+' Relationships - Using Standard UML Notation
+
+' Inheritance (Extension) - <|--
+Person <|-- Customer : extends
+Person <|-- Admin : extends
+Vehicle <|-- Car : extends
+Vehicle <|-- Van : extends
+
+' Interface Implementation - <|..
+Vehicle <|.. Rentable : implements
+
+' Aggregation (part can exist independently) - o--
+Customer o-- CustomerTier : has
+Admin o-- AdminLevel : has
+Car o-- CarType : has
+Van o-- VanType : has
+
+' Composition (part cannot exist without whole) - *--
+RentalService *-- Vehicle : contains
+RentalService *-- Customer : contains
+RentalService *-- Admin : contains
+RentalService *-- Booking : contains
+RentalService *-- Promotion : contains
+RentalService *-- DynamicArray : uses
+
+' Association (uses/references) - -->
+Booking --> Customer : customer
+Booking --> Vehicle : vehicle
+Booking --> Promotion : appliedGroupPromotion
+Booking --> Promotion : appliedLongTermPromotion
+
+' Dependency (weaker form) - ..>
+ReportGenerator ..> RentalService : depends on
+ConsoleUI ..> RentalService : depends on
+
+note right of Booking::calculateFinalCharge
+  Applies discounts in sequence:
+  1. Group Promotion
+  2. Long-term Promotion  
+  3. Customer Loyalty Discount
+end note
+
+note top of CustomerTier
+  Bronze: 0 rentals, 0% discount
+  Silver: 5+ rentals, 5% discount
+  Gold: 15+ rentals, 10% discount
+  Platinum: 30+ rentals, 15% discount
+end note
+
+@enduml

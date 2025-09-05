@@ -77,7 +77,6 @@ public class ConsoleUI {
             String password = ValidationUtil.getValidatedInput(sc, "Password: ", ValidationUtil::validatePassword);
             
             currentCustomer = service.loginCustomer(email, password);
-            System.out.println("Welcome back, " + currentCustomer.getName() + "!");
             pressEnterToContinue();
             customerMainMenu();
         } catch (Exception e) {
@@ -141,6 +140,10 @@ public class ConsoleUI {
         System.out.println("Name: " + currentCustomer.getName());
         System.out.println("Email: " + currentCustomer.getEmail());
         System.out.println("Phone: " + currentCustomer.getPhone());
+        System.out.println("Member Tier: " + currentCustomer.getTier().getDisplayName());
+        System.out.println("Total Rentals: " + currentCustomer.getTotalRentals());
+        System.out.println("Total Spent: RM" + String.format("%.2f", currentCustomer.getTotalSpent()));
+        System.out.println("Loyalty Discount Rate: " + String.format("%.1f", currentCustomer.getLoyaltyDiscount()) + "%");
         pressEnterToContinue();
     }
 
@@ -318,7 +321,6 @@ public class ConsoleUI {
             
             Admin admin = service.findAdminByEmail(email);
             if (admin != null && admin.login(email, password)) {
-                System.out.println("Welcome, Admin " + admin.getName() + "!");
                 pressEnterToContinue();
                 adminMainMenu(admin);
             } else {
@@ -333,23 +335,27 @@ public class ConsoleUI {
     private void adminMainMenu(Admin admin) {
         while (true) {
             try {
-                printHeader("ADMIN MENU - " + admin.getName());
+                printHeader("ADMIN MENU - " + admin.getRole());
                 System.out.println("1. Add New Vehicle");
                 System.out.println("2. View All Vehicles");
-                System.out.println("3. View All Bookings");
-                System.out.println("4. Manage Pricing");
-                System.out.println("5. Set Promotions");
+                System.out.println("3. Delete Vehicle");
+                System.out.println("4. View All Bookings");
+                System.out.println("5. Manage Pricing");
+                System.out.println("6. Set Promotions");
+                System.out.println("7. Generate Reports");
                 System.out.println("0. Logout");
                 System.out.println(LINE);
                 
-                int choice = ValidationUtil.getValidatedInteger(sc, "Please select an option: ", 0, 5);
+                int choice = ValidationUtil.getValidatedInteger(sc, "Please select an option: ", 0, 7);
                 
                 switch (choice) {
                     case 1 -> addVehicle();
                     case 2 -> viewAllVehicles();
-                    case 3 -> viewAllBookings();
-                    case 4 -> managePricing();
-                    case 5 -> setPromotions();
+                    case 3 -> deleteVehicle();
+                    case 4 -> viewAllBookings();
+                    case 5 -> managePricing();
+                    case 6 -> setPromotions();
+                    case 7 -> generateReports();
                     case 0 -> { return; }
                 }
             } catch (Exception e) {
@@ -595,15 +601,194 @@ public class ConsoleUI {
 
             if (type == 1) {
                 int cap = ValidationUtil.getValidatedInteger(sc, "Passenger capacity (2-7): ", 2, 7);
-                service.addVehicle(new Car(service.nextVehicleId(), model, cap, rate));
+                
+                // Enhanced Car creation with additional features
+                System.out.println("\nCar Type Options:");
+                System.out.println("1. Economy Car");
+                System.out.println("2. Compact Car"); 
+                System.out.println("3. Midsize Car");
+                System.out.println("4. Luxury Car");
+                int carTypeChoice = ValidationUtil.getValidatedInteger(sc, "Select car type: ", 1, 4);
+                Car.CarType carType = Car.CarType.values()[carTypeChoice - 1];
+                
+                String gps = ValidationUtil.getValidatedInput(sc, "Include GPS (yes/no): ", input -> {
+                    if (!input.toLowerCase().matches("^(yes|no)$")) {
+                        throw new IllegalArgumentException("Please enter 'yes' or 'no'");
+                    }
+                });
+                
+                String aircon = ValidationUtil.getValidatedInput(sc, "Include Air Conditioning (yes/no): ", input -> {
+                    if (!input.toLowerCase().matches("^(yes|no)$")) {
+                        throw new IllegalArgumentException("Please enter 'yes' or 'no'");
+                    }
+                });
+                
+                Car car = new Car(service.nextVehicleId(), model, cap, rate, carType, 
+                    gps.equalsIgnoreCase("yes"), aircon.equalsIgnoreCase("yes"));
+                service.addVehicle(car);
+                
             } else {
                 int cap = ValidationUtil.getValidatedInteger(sc, "Passenger capacity (8-15): ", 8, 15);
                 int lug = ValidationUtil.getValidatedInteger(sc, "Luggage space (4-12 bags): ", 4, 12);
-                service.addVehicle(new Van(service.nextVehicleId(), model, cap, lug, rate));
+                
+                // Enhanced Van creation with additional features
+                System.out.println("\nVan Type Options:");
+                System.out.println("1. Standard Van");
+                System.out.println("2. Luxury Van");
+                System.out.println("3. Executive Van");
+                int vanTypeChoice = ValidationUtil.getValidatedInteger(sc, "Select van type: ", 1, 3);
+                Van.VanType vanType = Van.VanType.values()[vanTypeChoice - 1];
+                
+                String wifi = ValidationUtil.getValidatedInput(sc, "Include WiFi (yes/no): ", input -> {
+                    if (!input.toLowerCase().matches("^(yes|no)$")) {
+                        throw new IllegalArgumentException("Please enter 'yes' or 'no'");
+                    }
+                });
+                
+                String tv = ValidationUtil.getValidatedInput(sc, "Include Entertainment System (yes/no): ", input -> {
+                    if (!input.toLowerCase().matches("^(yes|no)$")) {
+                        throw new IllegalArgumentException("Please enter 'yes' or 'no'");
+                    }
+                });
+                
+                Van van = new Van(service.nextVehicleId(), model, cap, lug, rate, vanType,
+                    wifi.equalsIgnoreCase("yes"), tv.equalsIgnoreCase("yes"));
+                service.addVehicle(van);
             }
-            System.out.println("Vehicle added successfully!");
+            System.out.println("+ Vehicle added successfully with enhanced features!");
         } catch (Exception e) {
             System.out.println("Error adding vehicle: " + e.getMessage());
         }
+        pressEnterToContinue();
+    }
+
+    private void deleteVehicle() {
+        try {
+            printHeader("DELETE VEHICLE");
+            var vehicles = service.getVehicles();
+            if (vehicles.isEmpty()) {
+                System.out.println("No vehicles in the system to delete.");
+                pressEnterToContinue();
+                return;
+            }
+
+            System.out.println("Select vehicle to delete:");
+            for (int i = 0; i < vehicles.size(); i++) {
+                Vehicle v = vehicles.get(i);
+                System.out.printf("%d. %s (%s) - %s%n", 
+                    i + 1, v.getModel(), v.getVehicleId(), 
+                    v.isAvailable() ? "Available" : "Currently Rented");
+            }
+            
+            int choice = ValidationUtil.getValidatedInteger(sc, 
+                "Enter vehicle number to delete: ", 1, vehicles.size());
+            
+            Vehicle selectedVehicle = vehicles.get(choice - 1);
+            
+            System.out.printf("Selected vehicle: %s (%s)%n", 
+                selectedVehicle.getModel(), selectedVehicle.getVehicleId());
+            
+            String confirm = ValidationUtil.getValidatedInput(sc, 
+                "Are you sure you want to delete this vehicle? (yes/no): ", input -> {
+                    if (!input.toLowerCase().matches("^(yes|no)$")) {
+                        throw new IllegalArgumentException("Please enter 'yes' or 'no'");
+                    }
+                });
+            
+            if (confirm.toLowerCase().equals("yes")) {
+                boolean deleted = service.deleteVehicle(selectedVehicle.getVehicleId());
+                if (deleted) {
+                    System.out.println("+ Vehicle deleted successfully!");
+                } else {
+                    System.out.println("X Failed to delete vehicle.");
+                }
+            } else {
+                System.out.println("Vehicle deletion cancelled.");
+            }
+            
+        } catch (Exception e) {
+            System.out.println("Error deleting vehicle: " + e.getMessage());
+        }
+        pressEnterToContinue();
+    }
+
+    private void generateReports() {
+        while (true) {
+            try {
+                printHeader("REPORTS & ANALYTICS");
+                System.out.println("1. Comprehensive Business Report");
+                System.out.println("2. Vehicle Performance Report");
+                System.out.println("3. Customer Analysis Report");
+                System.out.println("4. Revenue Analysis");
+                System.out.println("0. Back");
+                System.out.println(LINE);
+                
+                int choice = ValidationUtil.getValidatedInteger(sc, "Choose report type: ", 0, 4);
+                
+                switch (choice) {
+                    case 0 -> { return; }
+                    case 1 -> {
+                        ReportGenerator reporter = new ReportGenerator(service);
+                        reporter.generateComprehensiveReport();
+                        pressEnterToContinue();
+                    }
+                    case 2 -> {
+                        ReportGenerator reporter = new ReportGenerator(service);
+                        reporter.generateVehiclePerformanceReport();
+                        pressEnterToContinue();
+                    }
+                    case 3 -> generateCustomerReport();
+                    case 4 -> generateRevenueReport();
+                }
+            } catch (Exception e) {
+                System.out.println("Error generating report: " + e.getMessage());
+                pressEnterToContinue();
+            }
+        }
+    }
+
+    private void generateCustomerReport() {
+        printHeader("CUSTOMER ANALYSIS");
+        var customers = service.getCustomers();
+        
+        System.out.println("Customer Statistics:");
+        System.out.println("Total Customers: " + customers.size());
+        
+        // Customer tier distribution
+        int bronze = 0, silver = 0, gold = 0, platinum = 0;
+        for (var customer : customers) {
+            switch (customer.getTier()) {
+                case BRONZE -> bronze++;
+                case SILVER -> silver++;
+                case GOLD -> gold++;
+                case PLATINUM -> platinum++;
+            }
+        }
+        
+        System.out.println("\nTier Distribution:");
+        System.out.println("Bronze: " + bronze + " customers");
+        System.out.println("Silver: " + silver + " customers");
+        System.out.println("Gold: " + gold + " customers");
+        System.out.println("Platinum: " + platinum + " customers");
+        
+        pressEnterToContinue();
+    }
+
+    private void generateRevenueReport() {
+        printHeader("REVENUE ANALYSIS");
+        var bookings = service.getBookings();
+        
+        double totalRevenue = 0;
+        for (var booking : bookings) {
+            totalRevenue += booking.calculateCharge();
+        }
+        
+        System.out.printf("Total Revenue: RM%.2f%n", totalRevenue);
+        System.out.printf("Total Bookings: %d%n", bookings.size());
+        if (!bookings.isEmpty()) {
+            System.out.printf("Average Booking Value: RM%.2f%n", totalRevenue / bookings.size());
+        }
+        
+        pressEnterToContinue();
     }
 }
