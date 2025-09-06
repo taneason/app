@@ -2,6 +2,12 @@
 !theme plain
 skinparam classAttributeIconSize 0
 skinparam classFontStyle bold
+skinparam pageMargins 10
+skinparam maxMessageSize 300
+skinparam wrapWidth 400
+skinparam pageMaxHeight 0
+skinparam pageExternalColor white
+left to right direction
 title Vehicle Rental System - Class Diagram
 
 ' Abstract classes and interfaces
@@ -10,13 +16,37 @@ abstract class Person {
     # name: String
     # email: String
     # phone: String
-    # isLoggedIn: boolean
+    # password: Stringclass Bclaclass Veclass PaymentException extends RentalSystemException {
     --
-    + Person(String, String, String, String)
+    + PaymentException(String)
+}ption extends RentalSystemException {
+    --
+    + VehicleException(String)
+}erException extends RentalSystemException {
+    --
+    + CustomerException(String)
+}eption extends RentalSystemException {
+    --
+    + BookingException(String)
+}sLoggedIn: boolean
+    --
+    + Person(String, String, String, String, String)
     + login(String, String): boolean
     + logout(): void
-    + getRole(): String
-    + hasPermission(String): boolean
+    + getRole(): String*
+    + hasPermission(String): boolean*
+    + getId(): String
+    + getName(): String
+    + getEmail(): String
+    + getPhone(): String
+    + getPassword(): String
+    + isLoggedIn(): boolean
+    + setName(String): void
+    + setEmail(String): void
+    + setPhone(String): void
+    + setPassword(String): void
+    + setLoggedIn(boolean): void
+    + verifyPassword(String): boolean
     # authenticate(String, String): boolean {abstract}
     # onLoginSuccess(): void {abstract}
     # onLogout(): void {abstract}
@@ -27,27 +57,31 @@ interface Rentable {
     + setAvailable(boolean): void
     + getDailyRate(): double
     + getRentalInfo(): String
-    + performMaintenance(): void
 }
 
 ' Main vehicle hierarchy
 abstract class Vehicle {
-    - vehicleId: String
-    - model: String
-    - available: boolean
-    - dailyRate: double
-    - passengerCapacity: int
-    - totalRentals: int
+    # vehicleId: String
+    # model: String
+    # available: boolean
+    # dailyRate: double
+    # passengerCapacity: int
+    # totalRentals: int
     --
     + Vehicle(String, String, double, int)
     + getVehicleId(): String
     + getModel(): String
     + getDailyRate(): double
-    + setDailyRate(double): void
     + isAvailable(): boolean
-    + setAvailable(boolean): void
     + getPassengerCapacity(): int
     + getTotalRentals(): int
+    + setModel(String): void
+    + setDailyRate(double): void
+    + setAvailable(boolean): void
+    + setPassengerCapacity(int): void
+    + incrementTotalRentals(): void
+    + getRentalInfo(): String
+    + toString(): String
     + getType(): String {abstract}
     + getSpecialFeatures(): String {abstract}
 }
@@ -63,6 +97,9 @@ class Car {
     + getCarType(): CarType
     + hasGPS(): boolean
     + hasAirCon(): boolean
+    + setCarType(CarType): void
+    + setHasGPS(boolean): void
+    + setHasAirCon(boolean): void
 }
 
 class Van {
@@ -78,14 +115,19 @@ class Van {
     + getVanType(): VanType
     + hasWifi(): boolean
     + hasTV(): boolean
+    + setLuggageSpace(int): void
+    + setVanType(VanType): void
+    + setHasWifi(boolean): void
+    + setHasTV(boolean): void
 }
 
 ' Person hierarchy
 class Customer {
-    - password: String
     - totalRentals: int
     - totalSpent: double
     - tier: CustomerTier
+    - bookingHistory: List<Booking>
+    - favoriteVehicleType: String
     --
     + Customer(String, String, String, String, String)
     + getRole(): String
@@ -99,14 +141,26 @@ class Customer {
     + getCustomerId(): String
     + getTotalRentals(): int
     + getTotalSpent(): double
+    + getBookingHistory(): List<Booking>
+    + getFavoriteVehicleType(): String
+    + setTotalRentals(int): void
+    + setTotalSpent(double): void
+    + setTier(CustomerTier): void
+    + setFavoriteVehicleType(String): void
+    + updateProfile(String, String, String): void
+    + addBooking(Booking): void
 }
 
 class Admin {
-    - password: String
     - level: AdminLevel
     - actionsPerformed: int
+    - department: String
+    - managedCustomers: Set<Customer>
+    - managedVehicles: Set<Vehicle>
+    - managedDrivers: Set<Driver>
     --
-    + Admin(String, String, String, String)
+    + Admin(String, String, String, String, String)
+    + Admin(String, String, String, String, String, AdminLevel)
     + getRole(): String
     + hasPermission(String): boolean
     + authenticate(String, String): boolean
@@ -116,6 +170,23 @@ class Admin {
     + canPerformAction(): boolean
     + getAdminId(): String
     + getLevel(): AdminLevel
+    + getActionsPerformed(): int
+    + getDepartment(): String
+    + getManagedCustomers(): Set<Customer>
+    + getManagedVehicles(): Set<Vehicle>
+    + getManagedDrivers(): Set<Driver>
+    + setLevel(AdminLevel): void
+    + setActionsPerformed(int): void
+    + setDepartment(String): void
+    + addManagedCustomer(Customer): void
+    + removeManagedCustomer(Customer): void
+    + addManagedVehicle(Vehicle): void
+    + removeManagedVehicle(Vehicle): void
+    + addManagedDriver(Driver): void
+    + removeManagedDriver(Driver): void
+    + canManageVehicles(): boolean
+    + canManageCustomers(): boolean
+    + canManageDrivers(): boolean
 }
 
 ' Enumerations
@@ -154,6 +225,8 @@ enum VanType {
     EXECUTIVE
 }
 
+
+
 ' Driver service classes
 class Driver {
     - driverId: String
@@ -163,16 +236,31 @@ class Driver {
     - dailyRate: double
     - available: boolean
     - driverType: DriverType
+    - phoneNumber: String
+    - rating: double
     --
     + Driver(String, String, String, int, DriverType)
+    + Driver(String, String, String, int, DriverType, String, double)
     + getDriverId(): String
     + getName(): String
     + getLicenseNumber(): String
     + getExperienceYears(): int
     + getDailyRate(): double
     + isAvailable(): boolean
-    + setAvailable(boolean): void
     + getDriverType(): DriverType
+    + getPhoneNumber(): String
+    + getRating(): double
+    + setName(String): void
+    + setLicenseNumber(String): void
+    + setExperienceYears(int): void
+    + setDailyRate(double): void
+    + setAvailable(boolean): void
+    + setDriverType(DriverType): void
+    + setPhoneNumber(String): void
+    + setRating(double): void
+    + getExperienceLevel(): String
+    + isQualifiedForType(DriverType): boolean
+    + getHourlyRate(): double
     - calculateDailyRate(): double
     + toString(): String
 }
@@ -201,22 +289,39 @@ class Booking {
     - appliedGroupPromotion: Promotion
     - appliedLongTermPromotion: Promotion
     - finalCharge: double
-    - appliedLoyaltyDiscount: double
     - tierAtBooking: CustomerTier
+    - driverFee: double
     --
-    + Booking(String, Customer, Vehicle, LocalDate, int, Promotion, Promotion, Driver)
+    + Booking(String, Customer, Vehicle, LocalDate, int)
+    + Booking(String, Customer, Vehicle, LocalDate, int, Promotion, Promotion)
+    + Booking(String, Customer, Vehicle, LocalDate, int, Promotion, Promotion, Driver) // Driver is optional
     + getBookingId(): String
     + getCustomer(): Customer
     + getVehicle(): Vehicle
     + getAssignedDriver(): Driver
-    + hasDriver(): boolean
-    + isReturned(): boolean
+    + getStartDate(): LocalDate
     + getDurationDays(): int
-    + getAppliedLoyaltyDiscount(): double
-    + calculateCharge(): double
-    + returnVehicle(): void
+    + isReturned(): boolean
     + getAppliedGroupPromotion(): Promotion
     + getAppliedLongTermPromotion(): Promotion
+    + getFinalCharge(): double
+    + getTierAtBooking(): CustomerTier
+    + getDriverFee(): double
+    + setBookingId(String): void
+    + setCustomer(Customer): void
+    + setVehicle(Vehicle): void
+    + setAssignedDriver(Driver): void
+    + setStartDate(LocalDate): void
+    + setDurationDays(int): void
+    + setReturned(boolean): void
+    + setAppliedGroupPromotion(Promotion): void
+    + setAppliedLongTermPromotion(Promotion): void
+    + setFinalCharge(double): void
+    + setTierAtBooking(CustomerTier): void
+    + setDriverFee(double): void
+    + hasDriver(): boolean
+    + calculateCharge(): double
+    + returnVehicle(): void
     - calculateFinalCharge(): void
     + detailed(): String
 }
@@ -236,48 +341,64 @@ class Promotion {
     + getDiscountPercentage(): double
     + getThreshold(): int
     + isActive(): boolean
+    + setCode(String): void
+    + setType(String): void
+    + setDescription(String): void
+    + setDiscountPercentage(double): void
+    + setThreshold(int): void
     + setActive(boolean): void
     + formatThreshold(): String
 }
 
 ' Service layer
 class RentalService {
-    - vehicles: DynamicArray<Vehicle>
-    - customers: DynamicArray<Customer>
-    - admins: DynamicArray<Admin>
-    - bookings: DynamicArray<Booking>
-    - promotions: DynamicArray<Promotion>
-    - drivers: DynamicArray<Driver>
+    - vehicles: List<Vehicle>
+    - customers: List<Customer>
+    - admins: List<Admin>
+    - bookings: List<Booking>
+    - promotions: List<Promotion>
+    - drivers: List<Driver>
+    - custSeq: int
+    - adminSeq: int
+    - vehSeq: int
+    - bookSeq: int
+    - promoSeq: int
     --
     + RentalService()
     + addVehicle(Vehicle): void
     + deleteVehicle(String): boolean
-    + getVehicles(): List<Vehicle>
+    + getVehicles(): List<Vehicle> 
     + getAvailableVehicles(): List<Vehicle>
     + addCustomer(Customer): void
     + getCustomers(): List<Customer>
+    + findCustomerByEmail(String): Customer
     + loginCustomer(String, String): Customer
     + addAdmin(Admin): void
     + findAdminByEmail(String): Admin
     + rentVehicle(Customer, Vehicle, int, int): Booking
     + rentVehicleWithDriver(Customer, Vehicle, int, int, Driver): Booking
     + returnVehicle(String): void
-    + getBookings(): List<Booking>
+    + getBookings(): List<Booking> 
     + getBookingsByCustomer(Customer): List<Booking>
+    + nextPromotionCode(): String
     + addPromotion(Promotion): void
-    + getAllPromotions(): List<Promotion>
     + getActivePromotions(): List<Promotion>
-    + activatePromotion(String): void
+    + getAllPromotions(): List<Promotion>  
     + deactivatePromotion(String): void
+    + activatePromotion(String): void
     + addDriver(Driver): void
     + getDrivers(): List<Driver>
     + getAvailableDrivers(): List<Driver>
     + getAvailableDriversByType(DriverType): List<Driver>
+    + getDriversByType(DriverType): List<Driver>
     + findDriverById(String): Driver
+    + removeDriver(String): boolean
+    + updateDriver(String, String, String, int, DriverType): boolean
+    + updateDriverAvailability(String, boolean): boolean
     + nextCustomerId(): String
+    + nextAdminId(): String
     + nextVehicleId(): String
     + nextBookingId(): String
-    + nextPromotionCode(): String
 }
 
 ' Utility classes
@@ -336,49 +457,160 @@ class ConsoleUI {
     - generateReports(): void
     - addVehicle(): void
     - deleteVehicle(): void
-    - addDriver(): void
-    - viewAllDrivers(): void
     - setPromotions(): void
+    - manageDrivers(): void
+    - displayDriverOptions(): void
+    - applyPromotions(Customer, Vehicle, int): List<Promotion>
 }
+
+class ValidationUtil {
+    --
+    + {static} isValidEmail(String): boolean
+    + {static} isValidPhone(String): boolean
+    + {static} isStrongPassword(String): boolean
+    + {static} isValidVehicleId(String): boolean
+    + {static} isValidDate(LocalDate): boolean
+    + {static} isValidDuration(int): boolean
+    + {static} isValidPrice(double): boolean
+    + {static} sanitizeInput(String): String
+    + {static} validateBookingData(Customer, Vehicle, LocalDate, int): boolean
+}
+
+class DiscountCalculator {
+    --
+    + {static} calculateLoyaltyDiscount(Customer): double
+    + {static} calculateGroupDiscount(int): double
+    + {static} calculateLongTermDiscount(int): double
+    + {static} calculateTotalDiscount(double, double, double): double
+    + {static} applyPromotion(double, Promotion): double
+    + {static} calculateDriverFee(Driver, int): double
+}
+
+' Exception classes
+class RentalSystemException {
+    - message: String
+    --
+    + RentalSystemException(String)
+    + getMessage(): String
+}
+
+class BookingException extends RentalSystemException {
+    --
+    + BookingException(String)
+}
+
+class CustomerException extends RentalSystemException {
+    --
+    + CustomerException(String)
+}
+
+class VehicleException extends RentalSystemException {
+    --
+    + VehicleException(String)
+}
+
+class PaymentException extends RentalSystemException {
+    --
+    + PaymentException(String)
+}
+
+class BookingNotFoundException extends BookingException {
+    --
+    + BookingNotFoundException(String)
+}
+
+class BookingAlreadyReturnedException extends BookingException {
+    --
+    + BookingAlreadyReturnedException(String)
+}
+
+class CustomerNotLoggedInException extends CustomerException {
+    --
+    + CustomerNotLoggedInException(String)
+}
+
+class InvalidCredentialsException extends CustomerException {
+    --
+    + InvalidCredentialsException(String)
+}
+
+class InsufficientFundsException extends PaymentException {
+    - amountShort: double
+    --
+    + InsufficientFundsException(String, double)
+    + getAmountShort(): double
+}
+
+class VehicleNotAvailableException extends VehicleException {
+    --
+    + VehicleNotAvailableException(String)
+}
+
+
 
 ' Relationships - Using Standard UML Notation
 
 ' Inheritance (Extension) - <|--
-Person <|-- Customer : extends
-Person <|-- Admin : extends
-Vehicle <|-- Car : extends
-Vehicle <|-- Van : extends
+Person <|-- Customer
+Person <|-- Admin
+Vehicle <|-- Car
+Vehicle <|-- Van
+' Exception inheritance relationships defined via 'extends' in class definitions
+
+
 
 ' Interface Implementation - <|..
-Vehicle <|.. Rentable : implements
+Vehicle <|.. Rentable 
 
 ' Aggregation (part can exist independently) - o--
-Customer o-- CustomerTier : has
-Admin o-- AdminLevel : has
-Car o-- CarType : has
-Van o-- VanType : has
-Driver o-- DriverType : has
+Customer o-- "1" CustomerTier : has tier >
+Admin o-- "1" AdminLevel : has level >
+Car o-- "1" CarType : has type >
+Van o-- "1" VanType : has type >
+Driver o-- "1" DriverType : has type >
+
+Booking o-- "1" CustomerTier : records tier at booking >
 
 ' Composition (part cannot exist without whole) - *--
-RentalService *-- Vehicle : contains
-RentalService *-- Customer : contains
-RentalService *-- Admin : contains
-RentalService *-- Booking : contains
-RentalService *-- Promotion : contains
-RentalService *-- Driver : contains
-RentalService *-- DynamicArray : uses
+RentalService *-- Booking 
+RentalService *-- DynamicArray
 
-' Association (uses/references) - -->
-Booking --> Customer : customer
-Booking --> Vehicle : vehicle
-Booking --> Driver : assignedDriver
-Booking --> CustomerTier : tierAtBooking
-Booking --> Promotion : appliedGroupPromotion
-Booking --> Promotion : appliedLongTermPromotion
+' Aggregation (service manages these entities, but they can exist independently) - o--
+RentalService o-- Vehicle 
+RentalService o-- Customer
+RentalService o-- Admin 
+RentalService o-- Promotion
+RentalService o-- Driver 
+
+' Admin manages but doesn't own these entities - o--
+Admin o-- Customer : manages >
+Admin o-- Vehicle : manages >
+Admin o-- Driver : manages >
+
+' Association (uses/references) - --> with multiplicity
+Booking "1" --> "1" Customer 
+Booking "1" --> "1" Vehicle 
+Booking "1" --> "0..1" Driver : optional >
+Booking "1" --> "0..1" Promotion : group promotion >
+Booking "1" --> "0..1" Promotion : long-term promotion >
+Customer "1" --> "*" Booking : has bookings >
+
+
 
 ' Dependency (weaker form) - ..>
-ReportGenerator ..> RentalService : depends on
-ConsoleUI ..> RentalService : depends on
+ReportGenerator ..> RentalService 
+ConsoleUI ..> RentalService 
+ConsoleUI ..> Customer
+ConsoleUI ..> Vehicle
+ConsoleUI ..> Booking
+ConsoleUI ..> Driver
+Customer ..> RentalService : uses >
+Driver ..> RentalService : registered with >
+DiscountCalculator ..> Customer
+DiscountCalculator ..> Promotion
+ValidationUtil ..> Customer
+ValidationUtil ..> Vehicle
+ValidationUtil ..> Booking
 
 
 @enduml

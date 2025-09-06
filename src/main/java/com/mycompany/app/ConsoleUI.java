@@ -94,10 +94,11 @@ public class ConsoleUI {
                 System.out.println("3. Return a Vehicle");
                 System.out.println("4. View My Rental History");
                 System.out.println("5. My Profile");
+                System.out.println("6. Update Profile");
                 System.out.println("0. Logout");
                 System.out.println(LINE);
                 
-                int choice = ValidationUtil.getValidatedInteger(sc, "Please select an option: ", 0, 5);
+                int choice = ValidationUtil.getValidatedInteger(sc, "Please select an option: ", 0, 6);
                 
                 switch (choice) {
                     case 1 -> displayAvailableVehicles();
@@ -105,6 +106,7 @@ public class ConsoleUI {
                     case 3 -> returnVehicle();
                     case 4 -> viewHistory();
                     case 5 -> viewProfile();
+                    case 6 -> updateCustomerProfile();
                     case 0 -> {
                         currentCustomer.logout();
                         currentCustomer = null;
@@ -158,7 +160,7 @@ public class ConsoleUI {
             String phone = ValidationUtil.getValidatedInput(sc, "Phone Number: ", ValidationUtil::validatePhone);
             
             System.out.println("\nCreate your password:");
-            System.out.println("(Minimum 4 characters long)");
+            System.out.println("(Minimum 6 characters long)");
             String password = ValidationUtil.validateAndConfirmPassword(sc);
             
             Customer c = new Customer(service.nextCustomerId(), name, email, phone, password);
@@ -378,27 +380,33 @@ public class ConsoleUI {
                 System.out.println("1. Add New Vehicle");
                 System.out.println("2. View All Vehicles");
                 System.out.println("3. Delete Vehicle");
-                System.out.println("4. Add New Driver");
-                System.out.println("5. View All Drivers");
-                System.out.println("6. View All Bookings");
-                System.out.println("7. Manage Pricing");
-                System.out.println("8. Set Promotions");
-                System.out.println("9. Generate Reports");
+                System.out.println("4. Update Vehicle Details");
+                System.out.println("5. Add New Driver");
+                System.out.println("6. View All Drivers");
+                System.out.println("7. Update Driver Details");
+                System.out.println("8. Delete Driver");
+                System.out.println("9. View All Bookings");
+                System.out.println("10. Manage Pricing");
+                System.out.println("11. Manage Promotions");
+                System.out.println("12. Generate Reports");
                 System.out.println("0. Logout");
                 System.out.println(LINE);
                 
-                int choice = ValidationUtil.getValidatedInteger(sc, "Please select an option: ", 0, 9);
+                int choice = ValidationUtil.getValidatedInteger(sc, "Please select an option: ", 0, 12);
                 
                 switch (choice) {
                     case 1 -> addVehicle();
                     case 2 -> viewAllVehicles();
                     case 3 -> deleteVehicle();
-                    case 4 -> addDriver();
-                    case 5 -> viewAllDrivers();
-                    case 6 -> viewAllBookings();
-                    case 7 -> managePricing();
-                    case 8 -> setPromotions();
-                    case 9 -> generateReports();
+                    case 4 -> updateVehicleDetails();
+                    case 5 -> addDriver();
+                    case 6 -> viewAllDrivers();
+                    case 7 -> updateDriverDetails();
+                    case 8 -> deleteDriver();
+                    case 9 -> viewAllBookings();
+                    case 10 -> managePricing();
+                    case 11 -> managePromotions();
+                    case 12 -> generateReports();
                     case 0 -> { return; }
                 }
             } catch (Exception e) {
@@ -916,5 +924,406 @@ public class ConsoleUI {
             System.out.println("Error viewing drivers: " + e.getMessage());
         }
         pressEnterToContinue();
+    }
+
+    private void updateDriverDetails() {
+        try {
+            printHeader("UPDATE DRIVER DETAILS");
+            var drivers = service.getDrivers();
+            
+            if (drivers.isEmpty()) {
+                System.out.println("No drivers in the system.");
+                pressEnterToContinue();
+                return;
+            }
+            
+            // Display all drivers
+            System.out.println("Select a driver to update:");
+            for (int i = 0; i < drivers.size(); i++) {
+                System.out.println((i + 1) + ". " + drivers.get(i));
+                System.out.println();
+            }
+            
+            int driverIdx = ValidationUtil.getValidatedInteger(sc, 
+                "Select driver (1-" + drivers.size() + "): ", 1, drivers.size()) - 1;
+            Driver selectedDriver = drivers.get(driverIdx);
+            
+            System.out.println("\nSelected Driver: " + selectedDriver.getName());
+            System.out.println("What would you like to update?");
+            System.out.println("1. Name");
+            System.out.println("2. License Number");
+            System.out.println("3. Experience Years");
+            System.out.println("4. Driver Type");
+            System.out.println("5. Availability Status");
+            System.out.println("0. Cancel");
+            
+            int updateChoice = ValidationUtil.getValidatedInteger(sc, "Select option: ", 0, 5);
+            
+            switch (updateChoice) {
+                case 1 -> {
+                    String newName = ValidationUtil.getValidatedInput(sc, 
+                        "Enter new name (current: " + selectedDriver.getName() + "): ",
+                        input -> {
+                            if (input == null || input.trim().isEmpty()) {
+                                throw new IllegalArgumentException("Name cannot be empty");
+                            }
+                        });
+                    selectedDriver.setName(newName);
+                    System.out.println("Name updated successfully!");
+                }
+                case 2 -> {
+                    String newLicense = ValidationUtil.getValidatedInput(sc,
+                        "Enter new license number (current: " + selectedDriver.getLicenseNumber() + "): ",
+                        input -> {
+                            if (input == null || input.trim().isEmpty()) {
+                                throw new IllegalArgumentException("License number cannot be empty");
+                            }
+                        });
+                    selectedDriver.setLicenseNumber(newLicense);
+                    System.out.println("License number updated successfully!");
+                }
+                case 3 -> {
+                    int newExperience = ValidationUtil.getValidatedInteger(sc,
+                        "Enter new experience years (current: " + selectedDriver.getExperienceYears() + "): ",
+                        0, 50);
+                    selectedDriver.setExperienceYears(newExperience);
+                    System.out.println("Experience years updated successfully!");
+                }
+                case 4 -> {
+                    System.out.println("Current type: " + selectedDriver.getDriverType());
+                    System.out.println("1. STANDARD");
+                    System.out.println("2. PROFESSIONAL");
+                    System.out.println("3. LUXURY");
+                    int typeChoice = ValidationUtil.getValidatedInteger(sc, "Select new type: ", 1, 3);
+                    Driver.DriverType newType = switch (typeChoice) {
+                        case 1 -> Driver.DriverType.STANDARD;
+                        case 2 -> Driver.DriverType.PROFESSIONAL;
+                        case 3 -> Driver.DriverType.LUXURY;
+                        default -> selectedDriver.getDriverType();
+                    };
+                    selectedDriver.setDriverType(newType);
+                    System.out.println("Driver type updated successfully!");
+                }
+                case 5 -> {
+                    String availabilityInput = ValidationUtil.getValidatedInput(sc,
+                        "Set availability (current: " + (selectedDriver.isAvailable() ? "Available" : "Unavailable") + 
+                        ") - Enter 'available' or 'unavailable': ",
+                        input -> {
+                            if (!input.equalsIgnoreCase("available") && !input.equalsIgnoreCase("unavailable")) {
+                                throw new IllegalArgumentException("Please enter 'available' or 'unavailable'");
+                            }
+                        });
+                    boolean newAvailability = availabilityInput.equalsIgnoreCase("available");
+                    service.updateDriverAvailability(selectedDriver.getDriverId(), newAvailability);
+                    System.out.println("Availability updated successfully!");
+                }
+                case 0 -> System.out.println("Update cancelled.");
+            }
+            
+        } catch (Exception e) {
+            System.out.println("Error updating driver: " + e.getMessage());
+        }
+        pressEnterToContinue();
+    }
+
+    private void deleteDriver() {
+        try {
+            printHeader("DELETE DRIVER");
+            var drivers = service.getDrivers();
+            
+            if (drivers.isEmpty()) {
+                System.out.println("No drivers in the system.");
+                pressEnterToContinue();
+                return;
+            }
+            
+            // Display all drivers
+            System.out.println("Select a driver to delete:");
+            for (int i = 0; i < drivers.size(); i++) {
+                System.out.println((i + 1) + ". " + drivers.get(i));
+                System.out.println();
+            }
+            
+            int driverIdx = ValidationUtil.getValidatedInteger(sc, 
+                "Select driver (1-" + drivers.size() + "): ", 1, drivers.size()) - 1;
+            Driver selectedDriver = drivers.get(driverIdx);
+            
+            System.out.println("\nSelected Driver: " + selectedDriver.getName());
+            System.out.println("WARNING: This action cannot be undone!");
+            
+            ValidationUtil.getValidatedInput(sc,
+                "Type 'DELETE' to confirm deletion: ",
+                input -> {
+                    if (!input.equals("DELETE")) {
+                        throw new IllegalArgumentException("Please type 'DELETE' exactly to confirm");
+                    }
+                });
+            
+            boolean success = service.removeDriver(selectedDriver.getDriverId());
+            if (success) {
+                System.out.println("Driver deleted successfully!");
+            } else {
+                System.out.println("Failed to delete driver.");
+            }
+            
+        } catch (IllegalStateException e) {
+            System.out.println("Cannot delete driver: " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("Error deleting driver: " + e.getMessage());
+        }
+        pressEnterToContinue();
+    }
+    
+    // Additional management features using getter/setter methods
+    private void updateVehicleDetails() {
+        try {
+            printHeader("UPDATE VEHICLE DETAILS");
+            var vehicles = service.getVehicles();
+            
+            if (vehicles.isEmpty()) {
+                System.out.println("No vehicles in the system.");
+                pressEnterToContinue();
+                return;
+            }
+            
+            System.out.println("Select vehicle to update:");
+            for (int i = 0; i < vehicles.size(); i++) {
+                System.out.println((i + 1) + ". " + vehicles.get(i).getModel() + 
+                    " (" + vehicles.get(i).getVehicleId() + ")");
+            }
+            
+            int choice = ValidationUtil.getValidatedInteger(sc, 
+                "Select vehicle (1-" + vehicles.size() + "): ", 1, vehicles.size()) - 1;
+            Vehicle vehicle = vehicles.get(choice);
+            
+            System.out.println("\nCurrent details:");
+            System.out.println("Model: " + vehicle.getModel());
+            System.out.println("Daily Rate: RM" + vehicle.getDailyRate());
+            System.out.println("Passenger Capacity: " + vehicle.getPassengerCapacity());
+            
+            System.out.println("\nWhat would you like to update?");
+            System.out.println("1. Model");
+            System.out.println("2. Daily Rate");
+            System.out.println("3. Passenger Capacity");
+            System.out.println("0. Cancel");
+            
+            int updateChoice = ValidationUtil.getValidatedInteger(sc, "Select option: ", 0, 3);
+            
+            switch (updateChoice) {
+                case 1 -> {
+                    String newModel = ValidationUtil.getValidatedInput(sc, "New model: ", input -> {
+                        if (input.trim().length() < 2) {
+                            throw new IllegalArgumentException("Model must be at least 2 characters");
+                        }
+                    });
+                    vehicle.setModel(newModel);
+                    System.out.println("Model updated successfully!");
+                }
+                case 2 -> {
+                    double newRate = ValidationUtil.getValidatedDouble(sc, "New daily rate: ", 0.01, 10000.0);
+                    vehicle.setDailyRate(newRate);
+                    System.out.println("Daily rate updated successfully!");
+                }
+                case 3 -> {
+                    int newCapacity = ValidationUtil.getValidatedInteger(sc, "New passenger capacity: ", 1, 50);
+                    vehicle.setPassengerCapacity(newCapacity);
+                    System.out.println("Passenger capacity updated successfully!");
+                }
+                case 0 -> System.out.println("Update cancelled.");
+            }
+            
+        } catch (Exception e) {
+            System.out.println("Error updating vehicle: " + e.getMessage());
+        }
+        pressEnterToContinue();
+    }
+    
+    private void updateCustomerProfile() {
+        try {
+            printHeader("UPDATE CUSTOMER PROFILE");
+            
+            if (currentCustomer == null) {
+                System.out.println("No customer logged in.");
+                pressEnterToContinue();
+                return;
+            }
+            
+            System.out.println("Current profile:");
+            System.out.println("Name: " + currentCustomer.getName());
+            System.out.println("Email: " + currentCustomer.getEmail());
+            System.out.println("Phone: " + currentCustomer.getPhone());
+            
+            System.out.println("\nWhat would you like to update?");
+            System.out.println("1. Name");
+            System.out.println("2. Email");
+            System.out.println("3. Phone");
+            System.out.println("4. Password");
+            System.out.println("0. Cancel");
+            
+            int choice = ValidationUtil.getValidatedInteger(sc, "Select option: ", 0, 4);
+            
+            switch (choice) {
+                case 1 -> {
+                    String newName = ValidationUtil.getValidatedInput(sc, "New name: ", input -> {
+                        ValidationUtil.validateName(input);
+                    });
+                    currentCustomer.setName(newName);
+                    System.out.println("Name updated successfully!");
+                }
+                case 2 -> {
+                    String newEmail = ValidationUtil.getValidatedInput(sc, "New email: ", input -> {
+                        ValidationUtil.validateEmail(input);
+                    });
+                    currentCustomer.setEmail(newEmail);
+                    System.out.println("Email updated successfully!");
+                }
+                case 3 -> {
+                    String newPhone = ValidationUtil.getValidatedInput(sc, "New phone: ", input -> {
+                        ValidationUtil.validatePhone(input);
+                    });
+                    currentCustomer.setPhone(newPhone);
+                    System.out.println("Phone updated successfully!");
+                }
+                case 4 -> {
+                    // Verify current password first
+                    boolean passwordVerified = false;
+                    for (int attempts = 0; attempts < 3 && !passwordVerified; attempts++) {
+                        String currentPassword = ValidationUtil.getValidatedInput(sc, "Current password: ", input -> {
+                            if (input == null || input.trim().isEmpty()) {
+                                throw new IllegalArgumentException("Password cannot be empty");
+                            }
+                        });
+                        
+                        if (currentCustomer.verifyPassword(currentPassword)) {
+                            passwordVerified = true;
+                        } else {
+                            System.out.println("Incorrect password. " + (2-attempts) + " attempts remaining.");
+                        }
+                    }
+                    
+                    if (!passwordVerified) {
+                        System.out.println("Too many failed attempts. Password update cancelled.");
+                        break;
+                    }
+                    
+                    // Get and confirm new password
+                    String newPassword = ValidationUtil.validateAndConfirmPassword(sc);
+                    currentCustomer.setPassword(newPassword);
+                    System.out.println("Password updated successfully!");
+                }
+                case 0 -> System.out.println("Update cancelled.");
+            }
+            
+        } catch (Exception e) {
+            System.out.println("Error updating profile: " + e.getMessage());
+        }
+        pressEnterToContinue();
+    }
+    
+    private void managePromotions() {
+        try {
+            printHeader("MANAGE PROMOTIONS");
+            System.out.println("1. Set New Promotions");
+            System.out.println("2. View All Promotions");
+            System.out.println("3. Update Promotion");
+            System.out.println("4. Activate/Deactivate Promotion");
+            System.out.println("0. Back");
+            
+            int choice = ValidationUtil.getValidatedInteger(sc, "Select option: ", 0, 4);
+            
+            switch (choice) {
+                case 1 -> setPromotions();
+                case 2 -> viewAllPromotions();
+                case 3 -> updatePromotion();
+                case 4 -> togglePromotionStatus();
+                case 0 -> { return; }
+            }
+            
+        } catch (Exception e) {
+            System.out.println("Error managing promotions: " + e.getMessage());
+        }
+        pressEnterToContinue();
+    }
+    
+    private void viewAllPromotions() {
+        var promotions = service.getAllPromotions();
+        if (promotions.isEmpty()) {
+            System.out.println("No promotions in the system.");
+        } else {
+            promotions.forEach(System.out::println);
+        }
+    }
+    
+    private void updatePromotion() {
+        var promotions = service.getAllPromotions();
+        if (promotions.isEmpty()) {
+            System.out.println("No promotions to update.");
+            return;
+        }
+        
+        System.out.println("Select promotion to update:");
+        for (int i = 0; i < promotions.size(); i++) {
+            System.out.println((i + 1) + ". " + promotions.get(i).getCode() + 
+                " - " + promotions.get(i).getDescription());
+        }
+        
+        int choice = ValidationUtil.getValidatedInteger(sc, 
+            "Select promotion (1-" + promotions.size() + "): ", 1, promotions.size()) - 1;
+        Promotion promotion = promotions.get(choice);
+        
+        System.out.println("\nWhat would you like to update?");
+        System.out.println("1. Description");
+        System.out.println("2. Discount Percentage");
+        System.out.println("3. Threshold");
+        System.out.println("0. Cancel");
+        
+        int updateChoice = ValidationUtil.getValidatedInteger(sc, "Select option: ", 0, 3);
+        
+        switch (updateChoice) {
+            case 1 -> {
+                String newDesc = ValidationUtil.getValidatedInput(sc, "New description: ", input -> {
+                    if (input.trim().length() < 5) {
+                        throw new IllegalArgumentException("Description must be at least 5 characters");
+                    }
+                });
+                promotion.setDescription(newDesc);
+                System.out.println("Description updated successfully!");
+            }
+            case 2 -> {
+                double newPercentage = ValidationUtil.getValidatedDouble(sc, 
+                    "New discount percentage (0-100): ", 0.0, 100.0);
+                promotion.setDiscountPercentage(newPercentage);
+                System.out.println("Discount percentage updated successfully!");
+            }
+            case 3 -> {
+                int newThreshold = ValidationUtil.getValidatedInteger(sc, "New threshold: ", 1, 365);
+                promotion.setThreshold(newThreshold);
+                System.out.println("Threshold updated successfully!");
+            }
+            case 0 -> System.out.println("Update cancelled.");
+        }
+    }
+    
+    private void togglePromotionStatus() {
+        var promotions = service.getAllPromotions();
+        if (promotions.isEmpty()) {
+            System.out.println("No promotions in the system.");
+            return;
+        }
+        
+        System.out.println("Select promotion to toggle status:");
+        for (int i = 0; i < promotions.size(); i++) {
+            Promotion p = promotions.get(i);
+            System.out.println((i + 1) + ". " + p.getCode() + " - " + 
+                (p.isActive() ? "ACTIVE" : "INACTIVE"));
+        }
+        
+        int choice = ValidationUtil.getValidatedInteger(sc, 
+            "Select promotion (1-" + promotions.size() + "): ", 1, promotions.size()) - 1;
+        Promotion promotion = promotions.get(choice);
+        
+        promotion.setActive(!promotion.isActive());
+        System.out.println("Promotion " + promotion.getCode() + " is now " + 
+            (promotion.isActive() ? "ACTIVE" : "INACTIVE"));
     }
 }

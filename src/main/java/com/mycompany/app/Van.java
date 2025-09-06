@@ -69,6 +69,27 @@ public class Van extends Vehicle {
     public VanType getVanType() { return vanType; }
     public boolean hasWifi() { return hasWifi; }
     public boolean hasTV() { return hasTV; }
+    
+    // Setters
+    public void setLuggageSpace(int luggageSpace) { 
+        if (luggageSpace >= 0) {
+            this.luggageSpace = luggageSpace; 
+        }
+    }
+    
+    public void setVanType(VanType vanType) { 
+        if (vanType != null) {
+            this.vanType = vanType; 
+        }
+    }
+    
+    public void setHasWifi(boolean hasWifi) { 
+        this.hasWifi = hasWifi; 
+    }
+    
+    public void setHasTV(boolean hasTV) { 
+        this.hasTV = hasTV; 
+    }
 
     @Override
     public String toString() {
@@ -78,7 +99,6 @@ public class Van extends Vehicle {
                "\n| Type: " + getType() +
                "\n| Daily Rate: RM" + String.format("%.2f", getDailyRate()) +
                "\n| Status: " + (isAvailable() ? "Available" : "Rented") +
-               "\n| Condition: " + getMaintenanceStatus().getDescription() +
                "\n|" +
                "\n| Features:" +
                "\n| - Passenger Capacity: " + getPassengerCapacity() + " people" +

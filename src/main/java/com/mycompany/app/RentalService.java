@@ -41,7 +41,8 @@ public class RentalService {
         customers.add(c); 
     }
     
-    public List<Customer> getCustomers() { return customers; }
+    // Return defensive copy to protect encapsulation
+    public List<Customer> getCustomers() { return new ArrayList<>(customers); }
     
     public Customer findCustomerByEmail(String email) {
         return customers.stream()
@@ -82,7 +83,11 @@ public class RentalService {
             .findFirst()
             .orElse(null));
     }
-    public List<Vehicle> getVehicles() { return vehicles; }
+    
+    // Return defensive copy to protect encapsulation
+    public List<Vehicle> getVehicles() { return new ArrayList<>(vehicles); }
+    
+    // These methods already return new lists, so they're safe
     public List<Vehicle> getAvailableVehicles() {
         return vehicles.stream().filter(Vehicle::isAvailable).toList();
     }
@@ -201,7 +206,10 @@ public class RentalService {
         }
     }
 
-    public List<Booking> getBookings() { return bookings; }
+    // Return defensive copy to protect encapsulation
+    public List<Booking> getBookings() { return new ArrayList<>(bookings); }
+    
+    // This method already returns a new list, so it's safe
     public List<Booking> getBookingsByCustomer(Customer c) {
         return bookings.stream().filter(b -> b.getCustomer().equals(c)).toList();
     }
@@ -219,8 +227,9 @@ public class RentalService {
         return promotions.stream().filter(Promotion::isActive).toList();
     }
 
+    // Return defensive copy to protect encapsulation
     public List<Promotion> getAllPromotions() {
-        return promotions;
+        return new ArrayList<>(promotions);
     }
 
     public void deactivatePromotion(String code) {
@@ -242,8 +251,9 @@ public class RentalService {
         drivers.add(driver);
     }
 
+    // Return defensive copy to protect encapsulation
     public List<Driver> getDrivers() {
-        return drivers;
+        return new ArrayList<>(drivers);
     }
 
     public List<Driver> getAvailableDrivers() {
@@ -263,5 +273,73 @@ public class RentalService {
                 .filter(d -> d.getDriverId().equals(driverId))
                 .findFirst()
                 .orElse(null);
+    }
+
+    public boolean removeDriver(String driverId) {
+        Driver driver = findDriverById(driverId);
+        if (driver == null) {
+            return false;
+        }
+        
+        // Check if driver is currently assigned to any active booking
+        boolean isAssigned = bookings.stream()
+                .anyMatch(b -> !b.isReturned() && b.hasDriver() && 
+                          b.getAssignedDriver().getDriverId().equals(driverId));
+        
+        if (isAssigned) {
+            throw new IllegalStateException("Cannot remove driver: Currently assigned to active booking(s)");
+        }
+        
+        return drivers.remove(driver);
+    }
+
+    public boolean updateDriver(String driverId, String newName, String newLicenseNumber, 
+                               int newExperienceYears, DriverType newDriverType) {
+        Driver driver = findDriverById(driverId);
+        if (driver == null) {
+            return false;
+        }
+        
+        // Validate new data
+        if (newName != null && !newName.trim().isEmpty()) {
+            driver.setName(newName);
+        }
+        if (newLicenseNumber != null && !newLicenseNumber.trim().isEmpty()) {
+            driver.setLicenseNumber(newLicenseNumber);
+        }
+        if (newExperienceYears >= 0) {
+            driver.setExperienceYears(newExperienceYears);
+        }
+        if (newDriverType != null) {
+            driver.setDriverType(newDriverType);
+        }
+        
+        return true;
+    }
+
+    public boolean updateDriverAvailability(String driverId, boolean available) {
+        Driver driver = findDriverById(driverId);
+        if (driver == null) {
+            return false;
+        }
+        
+        // Check if trying to make unavailable but currently assigned
+        if (!available && !driver.isAvailable()) {
+            boolean isAssigned = bookings.stream()
+                    .anyMatch(b -> !b.isReturned() && b.hasDriver() && 
+                              b.getAssignedDriver().getDriverId().equals(driverId));
+            if (isAssigned) {
+                throw new IllegalStateException("Cannot make driver unavailable: Currently assigned to active booking(s)");
+            }
+        }
+        
+        driver.setAvailable(available);
+        return true;
+    }
+
+    public List<Driver> getDriversByType(DriverType type) {
+        return drivers.stream()
+                .filter(d -> d.getDriverType() == type)
+                .toList();
     }
 }

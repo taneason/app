@@ -9,20 +9,28 @@ public abstract class Person {
     protected String name;
     protected String email;
     protected String phone;
+    protected String password;
     protected boolean isLoggedIn;
 
-    public Person(String id, String name, String email, String phone) {
-        validateInput(id, name, email, phone);
+    public Person(String id, String name, String email, String phone, String password) {
+        validateInput(id, name, email, phone, password);
         this.id = id;
         this.name = name;
         this.email = email;
         this.phone = phone;
+        this.password = password;
         this.isLoggedIn = false;
     }
 
-    private void validateInput(String id, String name, String email, String phone) {
+    private void validateInput(String id, String name, String email, String phone, String password) {
         if (id == null || id.trim().isEmpty()) {
             throw new IllegalArgumentException("ID cannot be null or empty");
+        }
+        if (password == null || password.trim().isEmpty()) {
+            throw new IllegalArgumentException("Password cannot be null or empty");
+        }
+        if (password.length() < 6) {
+            throw new IllegalArgumentException("Password must be at least 6 characters long");
         }
         ValidationUtil.validateName(name);
         ValidationUtil.validateEmail(email);
@@ -58,20 +66,56 @@ public abstract class Person {
     public String getName() { return name; }
     public String getEmail() { return email; }
     public String getPhone() { return phone; }
+    public String getPassword() { return password; }
     public boolean isLoggedIn() { return isLoggedIn; }
 
-    // Protected setters for inheritance
-    protected void setName(String name) {
+    // Public setters with validation
+    public void setName(String name) {
         ValidationUtil.validateName(name);
         this.name = name;
     }
 
-    protected void setEmail(String email) {
+    public void setEmail(String email) {
         ValidationUtil.validateEmail(email);
         this.email = email;
     }
 
-    protected void setPhone(String phone) {
+    public void setPhone(String phone) {
+        ValidationUtil.validatePhone(phone);
+        this.phone = phone;
+    }
+    
+    public void setPassword(String password) {
+        if (password == null || password.trim().isEmpty()) {
+            throw new IllegalArgumentException("Password cannot be null or empty");
+        }
+        if (password.length() < 6) {
+            throw new IllegalArgumentException("Password must be at least 6 characters long");
+        }
+        this.password = password;
+    }
+    
+    public void setLoggedIn(boolean loggedIn) {
+        this.isLoggedIn = loggedIn;
+    }
+
+    // Password verification method
+    public boolean verifyPassword(String inputPassword) {
+        return this.password != null && this.password.equals(inputPassword);
+    }
+
+    // Protected setters for inheritance (keeping for backward compatibility)
+    protected void setNameProtected(String name) {
+        ValidationUtil.validateName(name);
+        this.name = name;
+    }
+
+    protected void setEmailProtected(String email) {
+        ValidationUtil.validateEmail(email);
+        this.email = email;
+    }
+
+    protected void setPhoneProtected(String phone) {
         ValidationUtil.validatePhone(phone);
         this.phone = phone;
     }

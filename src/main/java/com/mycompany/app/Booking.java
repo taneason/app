@@ -47,6 +47,30 @@ public class Booking {
     public int getDurationDays() { return durationDays; }
     public Driver getAssignedDriver() { return assignedDriver; }
     public boolean hasDriver() { return assignedDriver != null; }
+    public LocalDate getStartDate() { return startDate; }
+    public double getFinalCharge() { return finalCharge; }
+    public CustomerTier getTierAtBooking() { return tierAtBooking; }
+    
+    // Setters for mutable fields
+    public void setReturned(boolean returned) { 
+        this.returned = returned; 
+    }
+    
+    public void setAssignedDriver(Driver driver) { 
+        this.assignedDriver = driver;
+        // Recalculate charges when driver changes
+        calculateFinalCharge();
+    }
+    
+    public void setAppliedGroupPromotion(Promotion promotion) {
+        this.appliedGroupPromotion = promotion;
+        calculateFinalCharge();
+    }
+    
+    public void setAppliedLongTermPromotion(Promotion promotion) {
+        this.appliedLongTermPromotion = promotion;
+        calculateFinalCharge();
+    }
 
     private void calculateFinalCharge() {
         double baseCharge = durationDays * vehicle.getDailyRate();

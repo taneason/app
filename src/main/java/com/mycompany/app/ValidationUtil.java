@@ -23,8 +23,8 @@ public class ValidationUtil {
 
     public static String validateAndConfirmPassword(Scanner scanner) throws IllegalArgumentException {
         String password = getValidatedInput(scanner, "Enter password: ", input -> {
-            if (input == null || input.length() < 4) {
-                throw new IllegalArgumentException("Password must be at least 4 characters long");
+            if (input == null || input.length() < 6) {
+                throw new IllegalArgumentException("Password must be at least 6 characters long");
             }
         });
         
@@ -39,8 +39,8 @@ public class ValidationUtil {
     }
 
     public static void validatePassword(String password) throws IllegalArgumentException {
-        if (password == null || password.length() < 4) {
-            throw new IllegalArgumentException("Password must be at least 4 characters long");
+        if (password == null || password.length() < 6) {
+            throw new IllegalArgumentException("Password must be at least 6 characters long");
         }
     }
 

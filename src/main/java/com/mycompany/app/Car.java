@@ -66,6 +66,21 @@ public class Car extends Vehicle {
     public CarType getCarType() { return carType; }
     public boolean hasGPS() { return hasGPS; }
     public boolean hasAirCon() { return hasAirCon; }
+    
+    // Setters
+    public void setCarType(CarType carType) { 
+        if (carType != null) {
+            this.carType = carType; 
+        }
+    }
+    
+    public void setHasGPS(boolean hasGPS) { 
+        this.hasGPS = hasGPS; 
+    }
+    
+    public void setHasAirCon(boolean hasAirCon) { 
+        this.hasAirCon = hasAirCon; 
+    }
 
     @Override
     public String toString() {
@@ -75,7 +90,6 @@ public class Car extends Vehicle {
                "\n| Type: " + getType() +
                "\n| Daily Rate: RM" + String.format("%.2f", getDailyRate()) +
                "\n| Status: " + (isAvailable() ? "Available" : "Rented") +
-               "\n| Condition: " + getMaintenanceStatus().getDescription() +
                "\n|" +
                "\n| Features:" +
                "\n| - Passenger Capacity: " + getPassengerCapacity() + " people" +

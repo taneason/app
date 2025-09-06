@@ -9,7 +9,6 @@ package com.mycompany.app;
  * Provides administrative privileges and system management
  */
 public class Admin extends Person {
-    private String password;
     private AdminLevel level;
     private int actionsPerformed;
 
@@ -36,9 +35,7 @@ public class Admin extends Person {
     }
 
     public Admin(String adminId, String name, String email, String phone, String password, AdminLevel level) {
-        super(adminId, name, email, phone);
-        ValidationUtil.validatePassword(password);
-        this.password = password;
+        super(adminId, name, email, phone, password);
         this.level = level;
         this.actionsPerformed = 0;
     }
@@ -61,7 +58,7 @@ public class Admin extends Person {
 
     @Override
     protected boolean authenticate(String email, String password) {
-        return this.email.equalsIgnoreCase(email) && this.password.equals(password);
+        return this.email.equalsIgnoreCase(email) && this.verifyPassword(password);
     }
 
     @Override
@@ -93,6 +90,19 @@ public class Admin extends Person {
     public String getAdminId() { return getId(); }
     public AdminLevel getLevel() { return level; }
     public int getActionsPerformed() { return actionsPerformed; }
+    
+    // Setters
+    public void setLevel(AdminLevel level) {
+        if (level != null) {
+            this.level = level;
+        }
+    }
+    
+    public void setActionsPerformed(int actionsPerformed) {
+        if (actionsPerformed >= 0) {
+            this.actionsPerformed = actionsPerformed;
+        }
+    }
 
     @Override
     public String toString() {

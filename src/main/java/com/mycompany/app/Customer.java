@@ -9,7 +9,6 @@ package com.mycompany.app;
  * Includes rental history tracking and customer-specific behavior
  */
 public class Customer extends Person {
-    private String password;
     private int totalRentals;
     private double totalSpent;
     private CustomerTier tier;
@@ -36,9 +35,7 @@ public class Customer extends Person {
     }
 
     public Customer(String customerId, String name, String email, String phone, String password) {
-        super(customerId, name, email, phone);
-        ValidationUtil.validatePassword(password);
-        this.password = password;
+        super(customerId, name, email, phone, password);
         this.totalRentals = 0;
         this.totalSpent = 0.0;
         this.tier = CustomerTier.BRONZE;
@@ -59,7 +56,7 @@ public class Customer extends Person {
 
     @Override
     protected boolean authenticate(String email, String password) {
-        return this.email.equalsIgnoreCase(email) && this.password.equals(password);
+        return this.email.equalsIgnoreCase(email) && this.verifyPassword(password);
     }
 
     @Override
@@ -104,6 +101,26 @@ public class Customer extends Person {
     public int getTotalRentals() { return totalRentals; }
     public double getTotalSpent() { return totalSpent; }
     public CustomerTier getTier() { return tier; }
+    
+    // Setters
+    public void setTotalRentals(int totalRentals) {
+        if (totalRentals >= 0) {
+            this.totalRentals = totalRentals;
+            updateTier();
+        }
+    }
+    
+    public void setTotalSpent(double totalSpent) {
+        if (totalSpent >= 0) {
+            this.totalSpent = totalSpent;
+        }
+    }
+    
+    public void setTier(CustomerTier tier) {
+        if (tier != null) {
+            this.tier = tier;
+        }
+    }
 
     @Override
     public String toString() {

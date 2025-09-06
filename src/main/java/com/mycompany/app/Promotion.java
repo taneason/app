@@ -24,6 +24,38 @@ public class Promotion {
     public double getDiscountPercentage() { return discountPercentage; }
     public int getThreshold() { return threshold; }
     public boolean isActive() { return active; }
+    
+    // Setters
+    public void setCode(String code) { 
+        if (code != null && !code.trim().isEmpty()) {
+            this.code = code; 
+        }
+    }
+    
+    public void setType(String type) { 
+        if (type != null && (type.equals("GROUP") || type.equals("LONG_TERM"))) {
+            this.type = type; 
+        }
+    }
+    
+    public void setDescription(String description) { 
+        if (description != null && !description.trim().isEmpty()) {
+            this.description = description; 
+        }
+    }
+    
+    public void setDiscountPercentage(double discountPercentage) { 
+        if (discountPercentage >= 0 && discountPercentage <= 100) {
+            this.discountPercentage = discountPercentage; 
+        }
+    }
+    
+    public void setThreshold(int threshold) { 
+        if (threshold > 0) {
+            this.threshold = threshold; 
+        }
+    }
+    
     public void setActive(boolean active) { this.active = active; }
 
     @Override
