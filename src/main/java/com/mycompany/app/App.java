@@ -63,7 +63,7 @@ public class App {
         rs.addCustomer(new Customer(rs.nextCustomerId(), "Jessica Tan", "jessica@mail.com", "012-8888888", "jessica123456"));
         
         // Admin Staff
-        rs.addAdmin(new Admin(rs.nextAdminId(), "Fleet Manager", "admin@mail.com", "admin123456"));
+        rs.addAdmin(new Admin(rs.nextAdminId(), "Fleet Manager", "admin@mail.com", "012-3456789", "admin123456", Admin.AdminLevel.SUPERVISOR));
         rs.addAdmin(new Admin(rs.nextAdminId(), "Customer Service Manager", "support@mail.com", "012-9990000", "support123456", Admin.AdminLevel.SENIOR));
         rs.addAdmin(new Admin(rs.nextAdminId(), "Operations Director", "operations@mail.com", "012-9991111", "ops123456", Admin.AdminLevel.SUPERVISOR));
         rs.addAdmin(new Admin(rs.nextAdminId(), "Junior Admin", "junior@mail.com", "012-9992222", "junior123456", Admin.AdminLevel.JUNIOR));

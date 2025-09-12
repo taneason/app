@@ -123,7 +123,7 @@ public class Driver {
     
     /**
      * Sets the phone number for the driver
-     * @param phoneNumber The phone number in format XXX-XXXXXXX
+     * @param phoneNumber 
      */
     public void setPhoneNumber(String phoneNumber) {
         if (phoneNumber != null && phoneNumber.matches("^\\d{3}-\\d{7,8}$")) {

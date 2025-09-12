@@ -491,21 +491,19 @@ public class ConsoleUI {
         while (true) {
             try {
                 printHeader("PROMOTION MANAGEMENT");
-                System.out.println("1. View All Promotions");
-                System.out.println("2. Add Group Discount");
-                System.out.println("3. Add Long-term Rental Discount");
-                System.out.println("4. Activate/Deactivate Promotion");
+                System.out.println("1. Add Group Discount");
+                System.out.println("2. Add Long-term Rental Discount");
+                System.out.println("3. Activate/Deactivate Promotion");
                 System.out.println("0. Back");
                 System.out.println(LINE);
                 
-                int choice = ValidationUtil.getValidatedInteger(sc, "Choose option: ", 0, 4);
+                int choice = ValidationUtil.getValidatedInteger(sc, "Choose option: ", 0, 3);
                 
                 switch (choice) {
                     case 0 -> { return; }
-                    case 1 -> viewPromotions();
-                    case 2 -> addGroupPromotion();
-                    case 3 -> addLongTermPromotion();
-                    case 4 -> togglePromotion();
+                    case 1 -> addGroupPromotion();
+                    case 2 -> addLongTermPromotion();
+                    case 3 -> togglePromotion();
                 }
             } catch (Exception e) {
                 System.out.println("Error: " + e.getMessage());
@@ -514,7 +512,7 @@ public class ConsoleUI {
         }
     }
 
-    private void viewPromotions() {
+    private void viewAllPromotions() {
         printHeader("ALL PROMOTIONS");
         var allPromotions = service.getAllPromotions();
         if (allPromotions.isEmpty()) {
@@ -1241,18 +1239,11 @@ public class ConsoleUI {
             
         } catch (Exception e) {
             System.out.println("Error managing promotions: " + e.getMessage());
+            pressEnterToContinue();
         }
-        pressEnterToContinue();
+        
     }
     
-    private void viewAllPromotions() {
-        var promotions = service.getAllPromotions();
-        if (promotions.isEmpty()) {
-            System.out.println("No promotions in the system.");
-        } else {
-            promotions.forEach(System.out::println);
-        }
-    }
     
     private void updatePromotion() {
         var promotions = service.getAllPromotions();
